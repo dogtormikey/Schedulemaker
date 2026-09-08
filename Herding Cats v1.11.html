@@ -1,0 +1,3451 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Herding Cats — VEG ER for Pets</title>
+<style>
+/* VEG ER for Pets — brand red #eb2429, deep burgundy #6d0614, light blue accent.
+   Brand red carries identity and primary actions; hard violations use the deeper
+   burgundy so an error never reads as chrome; data meters use the blue. */
+:root{
+  color-scheme: light;
+  --paper:#faf4f2; --surface:#ffffff; --surface-2:#f6eeeb;
+  --ink:#1a0f10; --ink-2:#5b4a4b; --ink-3:#94807f;
+  --rule:#eddfdb; --line:#dcc9c5;
+  --good:#0ca30c; --warn:#fab219; --serious:#ec835a; --crit:#6d0614;
+  --brand:#eb2429; --brand-mid:#f4888b; --brand-soft:#fdeceb; --brand-deep:#b81f24;
+  --accent:#3a86c0; --accent-soft:#dcecf7; --accent-mid:#8fbfdf; --accent-deep:#24506e;
+  --ring:rgba(26,15,16,.12);
+  --shadow:0 1px 2px rgba(109,6,20,.07), 0 8px 26px rgba(109,6,20,.09);
+  --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* status pills */
+  --amber-bg:#fdf2d9; --amber-bd:#e0bd68; --amber-fg:#8a5d05; --warn-fg:#96660a;
+  --clash-bg:#f8e3e5; --clash-bd:#c98d95; --clash-fg:#6d0614;
+  --nerd:#6b4ea8; --nerd-soft:#efe9f8; --nerd-mid:#b6a3dc;
+  --ok-bg:#e4f5e4;    --ok-fg:#0a6b0a;
+  --veil:rgba(26,15,16,.34);
+  --hatch:#f8f0ed;
+}
+/* Dark mode is its own set of steps chosen against the dark surface, not an
+   inverted copy of the light values. Every step clears 3:1 on --surface. */
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --paper:#120c0c; --surface:#1c1413; --surface-2:#291d1c;
+  --ink:#fdf6f5; --ink-2:#cbb8b6; --ink-3:#9b8785;
+  --rule:#362726; --line:#4b3835;
+  --good:#22b722; --warn:#fab219; --serious:#ec835a; --crit:#ef6b6b;
+  --brand:#f4534f; --brand-mid:#a83a3a; --brand-soft:#3a1a1a; --brand-deep:#ff8b84;
+  --accent:#63a8dc; --accent-soft:#1e3448; --accent-mid:#3f6f95; --accent-deep:#8fc4e8;
+  --ring:rgba(255,255,255,.15);
+  --shadow:0 1px 2px rgba(0,0,0,.5), 0 8px 26px rgba(0,0,0,.45);
+  --amber-bg:#3a2c10; --amber-bd:#7a5c1c; --amber-fg:#f0c159; --warn-fg:#e0ab3c;
+  --clash-bg:#3d1c1e; --clash-bd:#7d3f44; --clash-fg:#f28c8c;
+  --nerd:#b9a3e8; --nerd-soft:#2a2140; --nerd-mid:#6b5a9c;
+  --ok-bg:#12331a;    --ok-fg:#5fd45f;
+  --veil:rgba(0,0,0,.6);
+  --hatch:#241a19;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:var(--sans); background:var(--paper); color:var(--ink);
+  font-size:14px; line-height:1.45; -webkit-font-smoothing:antialiased;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:none;padding:0}
+h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.01em}
+a{color:var(--accent)}
+
+/* ---------- chrome ---------- */
+.topbar{
+  position:sticky; top:0; z-index:60; background:var(--surface);
+  border-bottom:1px solid var(--rule); padding:10px 16px;
+  display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+  padding-top:calc(10px + env(safe-area-inset-top));
+}
+.brand{display:flex;align-items:center;gap:10px;margin-right:auto}
+.brand .mark{
+  background:var(--brand);color:#fff;font-weight:800;font-size:13px;letter-spacing:.04em;
+  padding:4px 8px;border-radius:7px;line-height:1.15;flex:none;
+}
+.brand .txt{display:flex;flex-direction:column;line-height:1.15}
+.brand h1{font-size:15px}
+.brand .sub{font-size:10.5px;color:var(--ink-3);letter-spacing:.09em;text-transform:uppercase}
+.monthnav{display:flex;align-items:center;gap:2px;border:1px solid var(--rule);border-radius:8px;background:var(--surface);overflow:hidden}
+.monthnav button{padding:6px 11px;color:var(--ink-2);font-size:15px;line-height:1}
+.monthnav button:hover{background:var(--surface-2)}
+.monthnav .mlabel{padding:6px 12px;font-weight:600;font-size:13.5px;min-width:148px;text-align:center;border-left:1px solid var(--rule);border-right:1px solid var(--rule);color:var(--ink)}
+.monthnav .mlabel:hover{background:var(--brand-soft);color:var(--brand-deep)}
+.cov{display:grid;grid-template-columns:104px repeat(7,minmax(0,1fr));gap:3px}
+.cov-h{font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);font-weight:700;text-align:center;padding-bottom:2px}
+.cov-h.we{color:var(--brand-deep)}
+.cov-r{font-size:11.5px;color:var(--ink-2);display:flex;align-items:center;justify-content:flex-end;padding-right:5px;font-variant-numeric:tabular-nums}
+.cov-r.noc{color:var(--accent-deep);font-weight:600}
+.cov-c{height:27px;border:1px solid var(--rule);border-radius:6px;background:var(--surface);color:transparent;font-size:11px;line-height:25px;text-align:center}
+.cov-c:hover{border-color:var(--brand-mid);background:var(--brand-soft)}
+.cov-c.on{background:var(--accent-soft);border-color:var(--accent-mid);color:var(--accent-deep)}
+.cov-c.on:hover{background:var(--brand-soft);border-color:var(--brand-mid)}
+.cov-r.tot,.cov-c.tot{font-size:11px;font-weight:700;color:var(--ink-3);border:none;background:none;height:22px;line-height:22px}
+.cov-c.tot{text-align:center;color:var(--ink-2)}
+.cov-c.tot.we{color:var(--brand-deep)}
+.prefbox{margin-top:8px}
+.nerdrow{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--rule)}
+.nerdrow.off{opacity:.5}
+.nerdrow input{flex:1}
+.nerdrow .ndot{width:9px;height:9px;border-radius:3px;background:var(--nerd-mid);flex:none}
+.nerdrow .ncnt{font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums;white-space:nowrap;flex:none}
+.nerdrow .btn{flex:none;padding:1px 7px}
+.blockrow{display:flex;align-items:center;gap:4px;flex-wrap:wrap;padding:2px 0 5px}
+.blockrow .lbl{font-size:11.5px;color:var(--ink-3);margin-right:3px}
+.bp{font-size:11px;border:1px solid var(--rule);border-radius:6px;padding:1px 7px;color:var(--ink-3);min-width:24px}
+.bp:hover{border-color:var(--accent-mid);color:var(--accent)}
+.bp.on{background:var(--accent-soft);border-color:var(--accent-mid);color:var(--accent-deep);font-weight:700}
+.prefsum{display:flex;align-items:center;gap:6px;width:100%;font-size:11.5px;color:var(--ink-3);text-align:left;padding:3px 0}
+.prefsum b{color:var(--ink-2);font-weight:600}
+.prefsum .ed{margin-left:auto;color:var(--accent);white-space:nowrap}
+.preflist{margin-top:5px;border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.prefrow{display:flex;align-items:center;gap:7px;padding:3px 7px;font-size:11.5px;border-bottom:1px solid var(--rule)}
+.prefrow:last-child{border-bottom:none}
+.prefrow .r{width:15px;color:var(--ink-3);font-variant-numeric:tabular-nums;font-size:10.5px}
+.prefrow .l{flex:1;color:var(--ink-2)}
+.prefrow.top .l{color:var(--ink);font-weight:600}
+.prefrow .mv{border:1px solid var(--rule);border-radius:5px;width:20px;height:19px;line-height:17px;text-align:center;color:var(--ink-3);font-size:10px}
+.prefrow .mv:hover{border-color:var(--accent-mid);color:var(--accent);background:var(--accent-soft)}
+.prefrow .mv[disabled]{opacity:.3;pointer-events:none}
+.pick .pref{font-size:10.5px;color:var(--accent);font-weight:600;white-space:nowrap}
+.btn{
+  border:1px solid var(--rule); border-radius:8px; padding:6px 11px; font-size:13px;
+  background:var(--surface); color:var(--ink-2); font-weight:500; white-space:nowrap;
+}
+.btn:hover{background:var(--surface-2);color:var(--ink)}
+.btn.primary{background:var(--brand);color:#fff;border-color:var(--brand)}
+.btn.primary:hover{background:var(--brand-deep)}
+.btn.on{background:var(--accent-soft);border-color:var(--accent-mid);color:#184f95}
+.btn.danger{color:var(--crit)}
+.syncpill{
+  font-size:11px;padding:3px 9px;border-radius:999px;border:1px solid var(--rule);
+  color:var(--ink-3);white-space:nowrap;display:inline-flex;align-items:center;gap:5px;
+}
+.syncpill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+.syncpill.s-saved{color:var(--good);border-color:color-mix(in srgb,var(--good) 35%,var(--rule))}
+.syncpill.s-saving{color:var(--accent);border-color:var(--accent-mid)}
+.syncpill.s-offline,.syncpill.s-blocked{color:var(--crit);border-color:var(--clash-bd);background:var(--clash-bg);font-weight:600}
+.syncpill.s-conflict{color:var(--amber-fg);border-color:var(--amber-bd);background:var(--amber-bg)}
+@media (max-width:860px){ .syncpill{font-size:10px;padding:2px 7px} }
+
+/* ---------- layout ---------- */
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) 316px;gap:16px;padding:16px;align-items:start;max-width:1720px;margin:0 auto}
+.panel{background:var(--surface);border:1px solid var(--rule);border-radius:12px}
+.panel-h{display:flex;align-items:center;gap:8px;padding:11px 14px;border-bottom:1px solid var(--rule)}
+.panel-h h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.panel-h .spacer{margin-left:auto}
+.panel-h .chev{display:none}
+
+/* ---------- KPI tiles ---------- */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.tile{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:11px 13px 12px}
+.tile .lab{font-size:11.5px;color:var(--ink-3);letter-spacing:.03em}
+.tile .val{font-size:27px;font-weight:600;letter-spacing:-.02em;margin-top:1px;line-height:1.1}
+.tile .val .of{font-size:14px;color:var(--ink-3);font-weight:500;letter-spacing:0}
+.tile .note{font-size:11.5px;color:var(--ink-2);margin-top:2px}
+.tile.alert .val{color:var(--crit)}
+.tile.warnt .val{color:var(--warn-fg)}
+.tile.clear .val{color:var(--good)}
+.meter{height:6px;border-radius:3px;background:var(--accent-soft);overflow:hidden;margin-top:8px}
+.meter>i{display:block;height:100%;border-radius:3px;background:var(--accent);transition:width .18s ease}
+.meter.over>i{background:var(--warn)}
+.meter.done>i{background:var(--good)}
+
+/* ---------- calendar ---------- */
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:0;border-top:1px solid var(--rule);border-left:1px solid var(--rule)}
+.dow{
+  padding:7px 9px;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);
+  font-weight:600;background:var(--surface-2);border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);
+  position:sticky;top:0;z-index:5;
+}
+.dow.we{color:var(--brand-deep);background:var(--brand-soft)}
+.day{border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);background:var(--surface);min-height:150px;padding:0 0 5px}
+.day.out{background:var(--surface-2);opacity:.55}
+.day.we{background:color-mix(in srgb, var(--brand-soft) 22%, var(--surface))}
+.day-h{display:flex;align-items:center;gap:6px;padding:5px 8px 4px;border-bottom:1px dotted var(--rule);position:relative}
+.day-n{font-size:15px;font-weight:600;letter-spacing:-.01em;padding:0 3px;border-radius:5px;line-height:1.25}
+button.day-n:hover{background:var(--brand-soft);color:var(--brand-deep)}
+button.day-n.custom{box-shadow:inset 0 -2px 0 var(--accent)}
+.dayslots{display:flex;flex-direction:column;gap:4px}
+.dayslot{
+  display:flex;align-items:center;gap:9px;width:100%;text-align:left;
+  border:1px solid var(--rule);border-radius:9px;padding:7px 10px;font-size:12.5px;color:var(--ink-3);
+}
+.dayslot:hover{border-color:var(--brand-mid);background:var(--brand-soft)}
+.dayslot.on{border-color:var(--accent-mid);background:var(--accent-soft);color:var(--ink)}
+.dayslot.on.noc .ds-name{color:var(--accent-deep);font-weight:600}
+.ds-l{display:flex;align-items:center;gap:8px;min-width:0}
+.ds-mark{font-size:12px;color:var(--accent)}
+.dayslot:not(.on) .ds-mark{color:var(--line)}
+.ds-name{font-weight:500}
+.ds-r{margin-left:auto;display:flex;align-items:center;gap:7px;flex:none}
+.ds-doc{font-size:11.5px;font-weight:700;padding:2px 7px;border-radius:5px;border:1px solid var(--ring);color:var(--ink)}
+.ds-doc[style*="--tint"]{background:var(--tint)}
+:root[data-theme="dark"] .ds-doc[style*="--tint"]{background:var(--tint-dark);color:var(--ink)}
+.ds-tag{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--accent-deep);
+  background:var(--accent-soft);border-radius:4px;padding:1px 5px}
+.day.today .day-n{background:var(--brand);color:#fff;border-radius:6px;padding:0 6px;margin-left:-4px}
+.day-dow{font-size:10.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;display:none}
+.day-cnt{margin-left:auto;font-size:10.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.day-cnt.short{color:var(--crit);font-weight:600}
+.off-line{
+  display:flex;flex-wrap:wrap;align-items:center;gap:3px;
+  padding:3px 7px 4px;border-bottom:1px dotted var(--rule);
+}
+.off-line b{font-size:9.5px;font-weight:700;color:var(--ink-3);letter-spacing:.07em;margin-right:1px}
+.offchip{
+  font-size:10px;font-weight:700;color:var(--amber-fg);background:var(--amber-bg);
+  border:1px solid var(--amber-bd);border-radius:4px;padding:0 4px;line-height:15px;
+}
+.offchip:hover{filter:brightness(1.08) saturate(1.1)}
+.offchip.clash{background:var(--clash-bg);border-color:var(--clash-bd);color:var(--clash-fg)}
+.offchip.clash:hover{filter:brightness(1.08) saturate(1.1)}
+.offadd{
+  font-size:11px;color:var(--ink-3);border:1px dashed var(--line);
+  border-radius:4px;padding:0 5px;line-height:15px;
+}
+.offadd:hover{color:var(--brand-deep);border-color:var(--brand-mid);background:var(--brand-soft)}
+.day.out .off-line{display:none}
+/* Spike 3 lane — one slim band per week, deliberately quieter than a shift row */
+.spklane{
+  border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);
+  background:var(--spk-soft);min-height:19px;padding:1px 5px;
+  display:flex;align-items:center;gap:3px;flex-wrap:wrap;text-align:left;width:100%;
+}
+.spklane.out{background:var(--surface-2);opacity:.45;pointer-events:none}
+.spklane.bare{min-height:13px}
+.spklane:hover{background:var(--spk-hover)}
+.spkchip{
+  font-size:9px;font-weight:700;line-height:1.35;color:var(--spk);white-space:nowrap;
+  display:inline-flex;align-items:center;gap:3px;
+}
+.spkchip .tm{font-weight:400;opacity:.85;font-variant-numeric:tabular-nums}
+.spkchip.open{color:var(--ink-3)}
+.spkchip.open .tm{opacity:.7}
+.spkchip + .spkchip{padding-left:4px;border-left:1px solid var(--spk-mid)}
+.spkdash{font-size:9px;color:var(--spk-mid)}
+.spkinline{display:none}
+.spkcard{border:1px solid var(--rule);border-radius:10px;padding:9px 10px;margin-bottom:8px;background:var(--surface)}
+.spkrow{display:flex;align-items:center;gap:7px}
+.spkrow select{font-size:12.5px;padding:5px 7px}
+.spktime{display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid var(--rule)}
+.spktime input[type=text]{flex:1}
+.spktime .hint{flex:none;font-size:11px}
+.spktime .btn{flex:none;padding:1px 7px}
+
+.slot{display:flex;align-items:center;gap:5px;padding:2px 7px;min-height:25px}
+.slot .t{font-size:10px;color:var(--ink-3);width:60px;flex:none;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.chip[style*="--tint"]{background:var(--tint)}
+:root[data-theme="dark"] .chip[style*="--tint"]{background:var(--tint-dark);color:var(--ink)}
+.dot[style*="--tint"]{background:var(--tint)}
+:root[data-theme="dark"] .dot[style*="--tint"]{background:var(--tint-dark)}
+.pick .ini[style*="--tint"]{background:var(--tint)}
+:root[data-theme="dark"] .pick .ini[style*="--tint"]{background:var(--tint-dark);color:var(--ink)}
+.chip{
+  flex:1; min-width:0; display:flex; align-items:center; gap:5px;
+  border-radius:6px; padding:3px 7px; font-size:12px; font-weight:600;
+  border:1px solid var(--ring); background:var(--surface-2); color:var(--ink);
+  text-align:left; position:relative; overflow:hidden;
+}
+.chip:hover{outline:2px solid var(--accent-mid);outline-offset:-1px}
+.chip .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip.open{background:repeating-linear-gradient(135deg,var(--surface),var(--surface) 5px,var(--hatch) 5px,var(--hatch) 10px);color:var(--ink-3);font-weight:500;border-style:dashed;border-color:var(--line)}
+.chip.open:hover{color:var(--ink-2)}
+.chip.hard{box-shadow:inset 0 0 0 2px var(--crit)}
+.chip.soft{box-shadow:inset 0 0 0 2px var(--warn)}
+.slot{align-items:flex-start}
+.slot .t{padding-top:4px}
+.cellcol{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.nerdline{display:flex;flex-wrap:wrap;gap:3px;padding-left:2px}
+.nerdchip{
+  font-size:9.5px;font-weight:700;letter-spacing:.02em;line-height:1.15;
+  color:var(--nerd);background:var(--nerd-soft);border:1px dashed var(--nerd-mid);
+  border-radius:5px;padding:2px 5px;
+}
+.nerdchip:hover{border-style:solid}
+.nerdadd{
+  font-size:9.5px;color:var(--ink-3);border:1px dashed var(--line);border-radius:5px;
+  padding:2px 5px;line-height:1.15;display:none;
+}
+.slot:hover .nerdadd,.nerdadd:focus-visible{display:inline-block}
+.nerdadd:hover{color:var(--nerd);border-color:var(--nerd-mid);background:var(--nerd-soft)}
+/* touch devices use the picker's own NERD button instead of a hover affordance */
+@media (hover:none){ .slot:hover .nerdadd{display:none} }
+.flag{margin-left:auto;font-size:10px;font-weight:700;flex:none;line-height:1}
+.flag.h{color:var(--crit)}
+.flag.s{color:var(--warn-fg)}
+.slot.noc .t{color:var(--accent-deep);font-weight:600}
+
+/* armed placement mode */
+body.armed .chip.open{border-color:var(--brand);background:var(--brand-soft);color:var(--brand-deep)}
+body.armed .chip:not(.open){opacity:.75}
+body.armed .chip.open.noarm{border-color:var(--rule);background:var(--surface);color:var(--ink-3);opacity:.5}
+.armbar{
+  position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom));z-index:70;
+  background:var(--brand);color:#fff;border-radius:999px;padding:9px 12px 9px 14px;
+  display:none;align-items:center;gap:10px;box-shadow:var(--shadow);font-size:13px;
+}
+body.armed .armbar{display:flex}
+.armbar .x{background:rgba(255,255,255,.16);border-radius:999px;width:22px;height:22px;color:#fff;font-size:14px;line-height:1}
+
+/* ---------- roster panel ---------- */
+.rtable{width:100%;border-collapse:collapse;font-size:12.5px}
+.rtable th{
+  text-align:right;font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);
+  font-weight:600;padding:7px 6px;border-bottom:1px solid var(--rule);white-space:nowrap;
+}
+.rtable th:first-child{text-align:left}
+.rtable td{padding:5px 6px;border-bottom:1px solid var(--rule);text-align:right;font-variant-numeric:tabular-nums;vertical-align:middle}
+.rtable td:first-child{text-align:left}
+.rtable tr:last-child td{border-bottom:none}
+.rtable tr.picked td{background:var(--brand-soft)}
+.rtable tbody tr:hover td{background:var(--surface-2)}
+.rname{display:flex;align-items:center;gap:7px;width:100%}
+.dot{width:9px;height:9px;border-radius:3px;flex:none;border:1px solid var(--ring)}
+.rname .ini{font-weight:600}
+.rname .noc-b{font-size:9px;color:var(--accent-deep);background:var(--accent-soft);border-radius:3px;padding:1px 3px;font-weight:700;letter-spacing:.03em}
+.cell-meter{display:flex;align-items:center;gap:6px;justify-content:flex-end}
+.cell-meter .m{width:46px;height:5px;border-radius:3px;background:var(--accent-soft);overflow:hidden;flex:none}
+.cell-meter .m>i{display:block;height:100%;background:var(--accent)}
+.cell-meter .m.over>i{background:var(--warn)}
+.cell-meter .m.done>i{background:var(--good)}
+.num.under{color:var(--crit);font-weight:600}
+.num.over{color:var(--warn-fg);font-weight:600}
+.num.exact{color:var(--good);font-weight:600}
+.mut{color:var(--ink-3)}
+
+/* ---------- issues list ---------- */
+.issues{max-height:270px;overflow:auto;font-size:12.5px}
+.issue{display:flex;gap:8px;padding:7px 13px;border-bottom:1px solid var(--rule);width:100%;text-align:left;align-items:flex-start}
+.issue:hover{background:var(--surface-2)}
+.issue .bar{width:3px;border-radius:2px;flex:none;align-self:stretch}
+.issue.h .bar{background:var(--crit)}
+.issue.s .bar{background:var(--warn)}
+.issue.q .bar{background:var(--accent)}
+.capnote{padding:7px 13px 8px;border-bottom:1px solid var(--rule);line-height:1.5;background:var(--accent-soft);color:var(--accent-deep)}
+.issue .d{font-size:11px;color:var(--ink-3);white-space:nowrap}
+.issue .m{color:var(--ink-2);line-height:1.35}
+.issue .m b{color:var(--ink)}
+.empty{padding:16px 14px;color:var(--ink-3);font-size:12.5px;text-align:center}
+.empty.ok{color:var(--good)}
+
+/* ---------- modal ---------- */
+.veil{position:fixed;inset:0;background:var(--veil);z-index:100;display:none;align-items:flex-start;justify-content:center;padding:5vh 14px 14px;overflow:auto}
+.veil.on{display:flex}
+#modalHost{width:100%;display:flex;justify-content:center}
+.modal{background:var(--surface);border-radius:14px;box-shadow:var(--shadow);width:100%;max-width:560px;border:1px solid var(--rule);overflow:hidden}
+.modal.wide{max-width:900px}
+.modal-h{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid var(--rule)}
+.modal-h h3{font-size:14px}
+.modal-h .sub{font-size:12px;color:var(--ink-3)}
+.modal-h .x{margin-left:auto;font-size:20px;color:var(--ink-3);line-height:1;padding:0 4px}
+.modal-b{padding:12px 16px;max-height:64vh;overflow:auto}
+.modal-f{padding:11px 16px;border-top:1px solid var(--rule);display:flex;gap:8px;align-items:center}
+.modal-f .spacer{margin-left:auto}
+
+/* picker */
+.pick{width:100%;display:flex;align-items:center;gap:9px;padding:8px 9px;border-radius:9px;border:1px solid transparent;text-align:left;margin-bottom:3px}
+.pick:hover{background:var(--surface-2);border-color:var(--rule)}
+.pick.blocked{opacity:.62;cursor:not-allowed}
+.pick.blocked:hover{background:none;border-color:transparent}
+.pick .who{display:flex;align-items:center;gap:7px;min-width:0}
+.pick .ini{font-weight:700;font-size:13px;padding:2px 6px;border-radius:5px;border:1px solid var(--ring)}
+.pick .full{font-size:12.5px;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pick .right{margin-left:auto;display:flex;align-items:center;gap:9px;flex:none}
+.pick .load{font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.pick .why{font-size:11px;font-weight:600;padding:2px 6px;border-radius:5px;white-space:nowrap;max-width:230px;overflow:hidden;text-overflow:ellipsis}
+.pick .why.h{background:var(--clash-bg);color:var(--clash-fg)}
+.pick .why.s{background:var(--amber-bg);color:var(--amber-fg)}
+.pick .why.g{background:var(--ok-bg);color:var(--ok-fg)}
+.pgroup{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin:11px 0 5px;padding-top:9px;border-top:1px solid var(--rule)}
+.pgroup:first-child{margin-top:0;padding-top:0;border-top:none}
+
+/* forms */
+.f-row{display:flex;gap:9px;align-items:center;margin-bottom:9px;flex-wrap:wrap}
+label.fl{font-size:11.5px;color:var(--ink-3);letter-spacing:.03em;display:block;margin-bottom:3px}
+input[type=text],input[type=number],input[type=date],select,textarea{
+  border:1px solid var(--line);border-radius:7px;padding:6px 8px;background:var(--surface);font-size:13px;width:100%;
+}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent-mid);outline-offset:-1px;border-color:var(--accent)}
+.chk{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-2);white-space:nowrap}
+.chk input{width:auto}
+.rowcard{border:1px solid var(--rule);border-radius:10px;padding:9px 10px;margin-bottom:8px;background:var(--surface)}
+.rulecard{border:1px solid var(--rule);border-radius:10px;padding:8px 10px 9px;margin-bottom:7px;background:var(--surface)}
+.rulecard.off{opacity:.5}
+.rule-top{display:flex;align-items:center;gap:8px}
+.rule-top input[type=checkbox]{width:auto;flex:none}
+.rule-txt{font-size:12.5px;color:var(--ink);flex:1}
+.rule-top .btn{padding:1px 7px;flex:none}
+.rule-edit{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:7px}
+.rule-edit select,.rule-edit input{font-size:12px;padding:4px 6px}
+.rowcard.off{opacity:.55}
+.grid5{display:grid;grid-template-columns:64px 1fr 62px 88px 34px;gap:8px;align-items:end}
+.daychks{display:flex;gap:4px;flex-wrap:wrap;margin-top:7px}
+.daychk{font-size:11px;border:1px solid var(--rule);border-radius:6px;padding:2px 6px;color:var(--ink-3)}
+.daychk.on{background:var(--amber-bg);border-color:var(--amber-bd);color:var(--amber-fg);font-weight:600}
+/* per-doctor request calendars */
+.doccols{display:grid;grid-template-columns:minmax(0,1fr) 214px;gap:15px;align-items:start}
+.reqblock h5{
+  display:flex;align-items:center;gap:6px;font-size:10px;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--ink-3);font-weight:700;margin:0 0 5px;
+}
+.reqblock h5 .n{margin-left:auto;font-size:10.5px;letter-spacing:0;text-transform:none;font-variant-numeric:tabular-nums}
+.reqblock h5 .n.has{color:var(--amber-fg);font-weight:700}
+.reqblock h5 .clr{color:var(--ink-3);font-size:13px;line-height:1;padding:0 2px}
+.reqblock h5 .clr:hover{color:var(--crit)}
+@media (max-width:760px){ .doccols{grid-template-columns:minmax(0,1fr)} }
+.reqbar{display:flex;align-items:center;gap:9px;margin-bottom:11px;flex-wrap:wrap}
+.reqbar .mn{display:flex;align-items:center;border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.reqbar .mn button{padding:4px 10px;color:var(--ink-2);font-size:14px;line-height:1}
+.reqbar .mn button:hover{background:var(--surface-2)}
+.reqbar .mn .lb{padding:4px 11px;font-weight:600;font-size:12.5px;min-width:132px;text-align:center;border-left:1px solid var(--rule);border-right:1px solid var(--rule)}
+.docgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(198px,1fr));gap:10px}
+.doccard{border:1px solid var(--rule);border-radius:10px;padding:8px 9px 9px;background:var(--surface)}
+.doccard h4{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;margin:0 0 7px}
+.doccard .cnt{margin-left:auto;font-size:11px;color:var(--ink-3);font-variant-numeric:tabular-nums;white-space:nowrap}
+.doccard .cnt.has{color:var(--amber-fg);font-weight:600}
+.doccard .clr{color:var(--ink-3);font-size:13px;line-height:1;padding:0 2px}
+.doccard .clr:hover{color:var(--crit)}
+.mini{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.mini .mh{font-size:9px;color:var(--ink-3);text-align:center;font-weight:700;letter-spacing:.02em;padding-bottom:2px}
+.mini button{
+  font-size:10.5px;height:23px;border-radius:5px;border:1px solid transparent;
+  color:var(--ink-2);font-variant-numeric:tabular-nums;position:relative;padding:0;
+}
+.mini button:hover{background:var(--surface-2);border-color:var(--line)}
+.mini button.blank{visibility:hidden;pointer-events:none}
+.mini button.we{color:var(--brand-deep)}
+.mini button.off{background:var(--amber-bg);border-color:var(--amber-bd);color:var(--amber-fg);font-weight:700}
+.mini button.sched::after{
+  content:"";position:absolute;right:2px;top:2px;width:4px;height:4px;border-radius:50%;background:var(--accent-mid);
+}
+.mini button.off.sched{background:var(--clash-bg);border-color:var(--clash-bd);color:var(--clash-fg)}
+.mini button.off.sched::after{background:var(--crit)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--ink-3);align-items:center}
+.legend span{display:flex;align-items:center;gap:5px}
+.legend i{width:15px;height:15px;border-radius:4px;border:1px solid var(--line);display:inline-block;position:relative}
+.legend i.off{background:var(--amber-bg);border-color:var(--amber-bd)}
+.legend i.cf{background:var(--clash-bg);border-color:var(--clash-bd)}
+.legend i.sc::after{content:"";position:absolute;right:1px;top:1px;width:4px;height:4px;border-radius:50%;background:var(--accent-mid)}
+.hint{font-size:11.5px;color:var(--ink-3);line-height:1.5}
+.hint code{background:var(--surface-2);padding:1px 4px;border-radius:4px;font-size:11px}
+pre.sql{
+  background:var(--surface-2);border:1px solid var(--rule);border-radius:8px;padding:9px 11px;
+  font-size:11px;line-height:1.5;overflow-x:auto;margin:7px 0 8px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink-2);white-space:pre;
+}
+
+/* ---------- responsive ---------- */
+@media (max-width:1180px){
+  .wrap{grid-template-columns:minmax(0,1fr)}
+  .kpis{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+@media (max-width:860px){
+  .wrap{padding:10px;gap:12px}
+  .side{order:-1}
+  .panel-h{cursor:pointer;user-select:none}
+  .panel-h .chev{display:inline-block;color:var(--ink-3);font-size:11px;transition:transform .15s}
+  .panel.folded .panel-h .chev{transform:rotate(-90deg)}
+  .panel.folded>*:not(.panel-h){display:none}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .cal{grid-template-columns:minmax(0,1fr);border-left:none}
+  .dow{display:none}
+  .day{min-height:0;border-right:none;border-radius:0}
+  .spklane{display:none}
+  .spkinline{
+    display:flex;align-items:center;gap:5px;flex-wrap:wrap;width:100%;text-align:left;
+    padding:3px 8px 4px;background:var(--spk-soft);border-bottom:1px dotted var(--rule);
+  }
+  .spkinline .spkchip{font-size:10px}
+  .day.out{display:none}
+  .day-dow{display:inline}
+  .slot .t{width:66px}
+  .brand .sub{display:none}
+  .brand h1{font-size:14px}
+  .brand .mark{font-size:12px;padding:3px 6px}
+  .topbar{padding:7px 10px;gap:6px;padding-top:calc(7px + env(safe-area-inset-top))}
+  .topbar .btn{padding:4px 9px;font-size:12px}
+  .monthnav button{padding:4px 9px}
+  .monthnav .mlabel{min-width:104px;padding:4px 8px;font-size:12.5px}
+  .modal-b{max-height:70vh}
+  .grid5{grid-template-columns:78px minmax(0,1fr) auto;gap:7px 8px}
+  .grid5>*:nth-child(1){grid-area:1/1}
+  .grid5>*:nth-child(2){grid-area:1/2/auto/span 2}
+  .grid5>*:nth-child(3){grid-area:2/1}
+  .grid5>*:nth-child(4){grid-area:2/2}
+  .grid5>*:nth-child(5){grid-area:2/3}
+  .grid5 input{min-width:0}
+}
+
+@media print{
+  /* always print light — a dark board would flood the page with ink */
+  :root, :root[data-theme="dark"]{
+    color-scheme: light;
+    --paper:#fff; --surface:#fff; --surface-2:#f6eeeb;
+    --ink:#000; --ink-2:#333; --ink-3:#666;
+    --rule:#bbb; --line:#999; --hatch:#f2f2f2;
+    --amber-bg:#fdf2d9; --amber-bd:#e0bd68; --amber-fg:#8a5d05; --warn-fg:#96660a;
+    --clash-bg:#f8e3e5; --clash-bd:#c98d95; --clash-fg:#6d0614;
+    --ok-bg:#e4f5e4; --ok-fg:#0a6b0a;
+    --brand:#eb2429; --brand-soft:#fdeceb; --brand-deep:#b81f24;
+    --accent:#3a86c0; --accent-deep:#24506e; --crit:#6d0614;
+  }
+  :root[data-theme="dark"] .chip[style*="--tint"],
+  :root[data-theme="dark"] .dot[style*="--tint"]{background:var(--tint)!important}
+  .topbar,.side,.armbar,.kpis .tile .meter,.noprint{display:none!important}
+  .offadd,.nerdadd{display:none!important}
+  :root[data-theme="dark"] .nerdchip{color:#4b3580;background:#f0ebf9;border-color:#b6a3dc}
+  body{background:#fff}
+  .wrap{grid-template-columns:1fr;padding:0;gap:8px}
+  .panel{border:none}
+  .day{min-height:120px}
+  .cal{border-left:1px solid #999;border-top:1px solid #999}
+  .day,.dow{border-color:#999}
+  .chip{box-shadow:none!important}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <span class="mark">VEG</span>
+    <span class="txt">
+      <h1>Herding Cats</h1>
+      <span class="sub">ER for Pets</span>
+    </span>
+  </div>
+  <div class="monthnav">
+    <button id="prevM" title="Previous month">‹</button>
+    <button class="mlabel" id="mLabel" title="Month coverage settings">—</button>
+    <button id="nextM" title="Next month">›</button>
+  </div>
+  <button class="btn" id="btnToday">Today</button>
+  <button class="btn primary" id="btnAuto">Auto-fill</button>
+  <button class="btn" id="btnRoster">Doctors</button>
+  <button class="btn" id="btnRules">Rules</button>
+  <button class="btn" id="btnData">Data</button>
+  <button class="btn" id="btnShare">Sharing</button>
+  <button class="btn" id="btnTheme" title="Switch between light and dark" aria-label="Switch theme">◐</button>
+  <span class="syncpill s-local" id="syncPill">Saved on this device</span>
+</div>
+
+<div class="wrap">
+  <div>
+    <div class="kpis" id="kpis"></div>
+    <div class="panel">
+      <div class="panel-h">
+        <h2 id="calTitle">Month</h2>
+        <span class="spacer"></span>
+        <span class="hint noprint" id="calHint"></span>
+      </div>
+      <div class="cal" id="cal"></div>
+    </div>
+  </div>
+
+  <div class="side">
+    <div class="panel foldable" id="panelRoster" style="margin-bottom:14px">
+      <div class="panel-h">
+        <h2>Load by doctor</h2>
+        <span class="spacer"></span>
+        <span class="hint">tap to place</span>
+        <span class="chev">▾</span>
+      </div>
+      <div style="padding:0 6px 4px">
+        <table class="rtable" id="rtable"></table>
+      </div>
+    </div>
+
+    <div class="panel foldable" id="panelIssues">
+      <div class="panel-h">
+        <h2>Issues</h2>
+        <span class="spacer"></span>
+        <span class="hint" id="issueCount"></span>
+        <span class="chev">▾</span>
+      </div>
+      <div class="issues" id="issues"></div>
+    </div>
+  </div>
+</div>
+
+<div class="armbar">
+  <span>Placing <b id="armName">—</b> — tap any open slot</span>
+  <button class="x" id="armX">×</button>
+</div>
+
+<div class="veil" id="veil"><div id="modalHost"></div></div>
+
+<script>
+"use strict";
+
+const APP_VERSION = "1.11.0";
+const APP_BUILT   = "2026-09-04";
+
+/* ============================================================
+   1. MODEL
+   ============================================================ */
+
+const SLOTS = {
+  ins:  {label:"6a–6p ins",   start:6,  len:12, kind:"day"},
+  outs: {label:"6a–6p outs",  start:6,  len:12, kind:"day"},
+  d8:   {label:"8a–8p",       start:8,  len:12, kind:"day"},
+  d10:  {label:"10a–10p",     start:10, len:12, kind:"day"},
+  d12:  {label:"12p–12a",     start:12, len:12, kind:"day"},
+  d14:  {label:"2p–2a",       start:14, len:12, kind:"late"},
+  spk3: {label:"4p–10p SPK3", start:16, len:6,  kind:"day"},
+  d16:  {label:"4p–2a",       start:16, len:10, kind:"late"},
+  noc:  {label:"6p–6a",       start:18, len:12, kind:"night", overnight:true},
+  // Spike 3 never appears in a coverage template — it is scheduled per day with
+  // its own hours — but it needs an entry here so rule messages can name it.
+  spk:  {label:"Spike 3",     start:14, len:6,  kind:"late", spike:true},
+};
+// Weekday shape, derived from the Nov 2025 – Nov 2026 master schedule.
+const TEMPLATE = {
+  0:["ins","outs","d10","d12","d16","noc"],  // Sunday  — 6
+  1:["ins","outs","d10","d14","noc"],        // Monday  — 5
+  2:["ins","d8","d14","noc"],                // Tuesday — 4
+  3:["ins","d8","d14","noc"],                // Wednesday
+  4:["ins","d8","d14","noc"],                // Thursday
+  5:["ins","outs","d10","d12","d16","noc"],  // Friday  — 6
+  6:["ins","outs","d10","d12","d16","noc"],  // Saturday— 6
+};
+const SLOT_ORDER = ["ins","outs","d8","d10","d12","d14","spk3","d16","noc"];
+
+/* NERDs — New Emergency Room Doctors. They shadow whoever holds a shift rather
+   than being scheduled onto it, so they never affect coverage, targets or rules.
+   Two placement limits of their own: never a Wednesday, and on Tuesdays only the
+   6a–6p and 8a–8p shifts. */
+/* Spike 3 — a triage doctor who does not see cases. Scheduled per day from a
+   list of times you define, so odd hours need no new row in the grid. They are
+   a doctor being scheduled, so the hard rules apply; they are not coverage, so
+   the day's count ignores them. */
+const SEED_SPIKE_TIMES = [
+  {id:"s1", label:"2p–8p",  start:14, end:20},
+  {id:"s2", label:"4p–10p", start:16, end:22},
+];
+const spikeTimes = ()=> (S.spikeTimes && S.spikeTimes.length) ? S.spikeTimes : SEED_SPIKE_TIMES;
+const spikeTime = id => spikeTimes().find(t=>t.id===id) || spikeTimes()[0];
+const spikeOn = ds => (S.spike||{})[ds] || [];
+const docSpike = (ds,id) => spikeOn(ds).find(e=>e.doc===id) || null;
+function spikeStartHour(ds, id){
+  const e = docSpike(ds,id);
+  return e ? (spikeTime(e.t)||{start:14}).start : 14;
+}
+function addSpike(ds, timeId, doc){
+  S.spike = S.spike || {};
+  const list = S.spike[ds] = (S.spike[ds]||[]).slice();
+  list.push({t:timeId, doc:doc||null});
+  S.spike[ds] = list;
+}
+function setSpikeDoc(ds, idx, doc){
+  const list = (S.spike||{})[ds]; if(!list || !list[idx]) return;
+  list[idx] = {...list[idx], doc:doc||null};
+}
+function setSpikeTime(ds, idx, timeId){
+  const list = (S.spike||{})[ds]; if(!list || !list[idx]) return;
+  list[idx] = {...list[idx], t:timeId};
+}
+function removeSpike(ds, idx){
+  const list = (S.spike||{})[ds]; if(!list) return;
+  list.splice(idx,1);
+  if(!list.length) delete S.spike[ds];
+}
+function spikeCounts(y,m){
+  const out = {};
+  for(const ds of monthDays(y,m))
+    for(const e of spikeOn(ds)) if(e.doc) out[e.doc]=(out[e.doc]||0)+1;
+  return out;
+}
+
+const NERD_TUESDAY_SLOTS = ["ins","outs","d8"];
+function nerdAllowed(dateStr, slot){
+  const w = dowOf(dateStr);
+  if(w===3) return {ok:false, why:"NERDs are not scheduled on Wednesdays"};
+  if(w===2 && !NERD_TUESDAY_SLOTS.includes(slot))
+    return {ok:false, why:"On Tuesdays NERDs only work 6a–6p or 8a–8p"};
+  return {ok:true};
+}
+const activeNerds = ()=> (S.nerds||[]).filter(n=>n.active!==false);
+const nerdById = id => (S.nerds||[]).find(n=>n.id===id) || null;
+const nerdsOn = (ds, slot)=> ((S.nerdAssign||{})[ds]||{})[slot] || [];
+function nerdDayShifts(ds, id){
+  const day = (S.nerdAssign||{})[ds] || {};
+  return Object.keys(day).filter(k=>(day[k]||[]).includes(id));
+}
+function setNerd(ds, slot, id, on){
+  S.nerdAssign = S.nerdAssign || {};
+  const day = S.nerdAssign[ds] = S.nerdAssign[ds] || {};
+  const list = day[slot] = (day[slot] || []).slice();
+  const i = list.indexOf(id);
+  if(on && i<0) list.push(id);
+  if(!on && i>=0) list.splice(i,1);
+  day[slot] = list;
+  if(!list.length) delete day[slot];
+  if(!Object.keys(day).length) delete S.nerdAssign[ds];
+}
+function clearNerds(ds, slot){
+  const day = (S.nerdAssign||{})[ds];
+  if(!day) return;
+  delete day[slot];
+  if(!Object.keys(day).length) delete S.nerdAssign[ds];
+}
+// count across the month currently in view
+function nerdCounts(y,m){
+  const out = {};
+  activeNerds().forEach(n=> out[n.id]=0);
+  for(const ds of monthDays(y,m)){
+    const day = (S.nerdAssign||{})[ds] || {};
+    for(const slot in day) for(const id of day[slot]) if(out[id]!==undefined) out[id]++;
+  }
+  return out;
+}
+const DOW = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const DOW3 = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+// Default shift preferences, ordered most-wanted first. Seeded from what each
+// doctor actually worked across Nov 2025 – Nov 2026, so the ranking starts from
+// real behaviour rather than blank. Soft weighting only — never a rule.
+const SEED_PREFS = {
+  MG:["ins","d12","outs","d14","d8","d10","d16","spk3","noc"],
+  SR:["ins","outs","d10","d8","d12","d14","spk3","d16","noc"],
+  CB:["noc","d14","d12","d16","d10","d8","ins","outs","spk3"],
+  RL:["noc","d14","d16","d12","d10","ins","outs","d8","spk3"],
+  KF:["d14","d16","noc","ins","d10","d12","d8","outs","spk3"],
+  CL:["d14","noc","d12","d10","ins","d8","d16","outs","spk3"],
+  CD:["outs","ins","d8","d10","spk3","d14","d12","d16","noc"],
+  MN:["ins","d8","outs","d10","d14","d12","spk3","d16","noc"],
+  MFW:["ins","outs","d8","d10","d12","d14","spk3","d16","noc"],
+  SD:["ins","d10","d14","d16","d8","noc","d12","outs","spk3"],
+  HK:["noc","d14","d16","d10","d12","ins","d8","outs","spk3"],
+  MP:["d14","noc","d16","d12","d10","d8","ins","outs","spk3"],
+  CH:["ins","outs","d8","d12","d10","d14","spk3","d16","noc"],
+  DM:["ins","d14","outs","d10","d8","d16","d12","noc","spk3"],
+  TL:["d10","ins","d8","outs","d12","d14","spk3","d16","noc"],
+};
+// How many shifts in a row each doctor tends to work. Taken from the run
+// lengths in the master schedule, weighted by how much of their work each run
+// length actually carried. 0 would mean no preference.
+const SEED_BLOCK = {
+  MG:3, SR:2, CB:3, RL:3, KF:2, CL:3, CD:2, MN:2,
+  MFW:2, SD:2, HK:2, MP:2, CH:1, DM:3, TL:2,
+};
+
+// Doctor identity tints. Two selected sets, hue-matched by index, so a doctor
+// keeps the same hue in both modes. Initials always carry identity — colour only
+// reinforces it, which is why 16 slots is acceptable here.
+const TINTS = [
+  "#fbdfe0","#fde3d2","#d9eee2","#fcf0cf","#f7dcea","#dceccf","#e2ddf3","#f9d6d6",
+  "#d9e8ee","#f2e2d0","#e8e6cb","#eeddef","#d3e9f2","#f6ded1","#e0e4ec","#ece5d8"
+];
+const TINTS_DARK = [
+  "#5e2b30","#6a3a1f","#14463a","#5a4413","#5c2544","#274a1f","#35306b","#6a2626",
+  "#1f4257","#56412a","#464a1d","#4d2a55","#144a54","#63382c","#333e52","#4c4430"
+];
+function darkTint(hex){
+  const i = TINTS.indexOf(hex);
+  return i>=0 ? TINTS_DARK[i] : `color-mix(in srgb, ${hex} 34%, #1c1413)`;
+}
+// Paint an element with a doctor's colour in a way that works in both modes.
+function tintEl(node, hex){
+  node.style.setProperty("--tint", hex);
+  node.style.setProperty("--tint-dark", darkTint(hex));
+}
+
+// Seeded from the Nov 2026 preferred-shifts table in the master schedule.
+// nightOK mirrors the "# OVN SHIFTS" column: doctors showing 0 overnights in
+// every month are marked day-only.
+function seedRoster(){
+  const d = (initials,name,target,nightOK,restrictions,notes)=>
+    ({id:initials,initials,name:name||"",target,nightOK,restrictions:restrictions||[],notes:notes||"",
+      active:true, prefs:(SEED_PREFS[initials]||SLOT_ORDER).slice(),
+      blockPref:(SEED_BLOCK[initials]||0)});
+  const r = [
+    d("MG","",10,false),
+    d("SR","",10,false),
+    d("CB","",12,true),
+    d("RL","",12,true,[],"Carries the bulk of overnights"),
+    d("KF","",12,true,[{days:[4],slots:"all"},{days:[3],slots:"late"}],"No Thursdays, no late Wednesday"),
+    d("CL","",12,true,[{days:[4],slots:"all"},{days:[3],slots:"late"}],"No Thursdays, no late Wednesday"),
+    d("CD","",10,false),
+    d("MN","",12,false),
+    d("MFW","",10,false),
+    d("SD","",12,true),
+    d("HK","",12,true),
+    d("MP","",10,true),
+    d("CH","",8,false,[],"Master schedule note: “15 or 29 for CH”"),
+    d("DM","",10,true),
+    d("TL","",10,false,[],"New — confirm target and overnight eligibility"),
+  ];
+  r.forEach((x,i)=>x.color = TINTS[i % TINTS.length]);
+  return r;
+}
+
+const DEFAULT_RULES = {
+  allowOverride:false,
+  maxConsecNights:3,
+  maxConsecDays:6,
+  weekendDays:[0,6],
+  warnOverTarget:true,
+  prefStrength:"balanced",   // "balanced" | "strong"
+  nightOffDays:2,            // full days off after an overnight — no shift at all
+  nightEarlyDays:3,          // days before a shift starting before noon is allowed
+  // every hard rule can be switched off from the Rules tab
+  onPto:true, onNight:true, onOneADay:true, onRecovery:true,
+  // monthly minimums and maximums, edited in the Rules tab
+  quotas:[
+    {id:"sat", on:true, kind:"min", count:2, what:{type:"weekday", weekday:6}, who:"all"},
+    {id:"sun", on:true, kind:"min", count:2, what:{type:"weekday", weekday:0}, who:"all"},
+    {id:"ins", on:true, kind:"min", count:2, what:{type:"slot", slot:"ins"},   who:"dayonly"},
+  ],
+};
+const WHO_LABEL = {all:"every doctor", dayonly:"doctors who do not work overnights", night:"doctors who work overnights"};
+function whoMatches(rule, doc){
+  if(rule.who==="all") return true;
+  if(rule.who==="dayonly") return !doc.nightOK;
+  if(rule.who==="night") return !!doc.nightOK;
+  return doc.id===rule.who;
+}
+function quotaMatches(rule, ds, slot){
+  const w = rule.what||{};
+  if(w.type==="weekday") return dowOf(ds)===w.weekday;
+  if(w.type==="slot")    return slot===w.slot;
+  return true;                                  // any shift
+}
+function quotaLabel(rule){
+  const w = rule.what||{};
+  const unit = w.type==="weekday" ? `${DOW[w.weekday]}s`
+             : w.type==="slot"    ? SLOTS[w.slot].label
+             : "shifts";
+  const verb = rule.kind==="min" ? "must work at least" : "must not work more than";
+  const whoTxt = WHO_LABEL[rule.who] || (docById(rule.who) ? rule.who : rule.who);
+  return `${whoTxt} ${verb} ${rule.count} ${unit} a month`;
+}
+const activeQuotas = ()=> (S.rules.quotas||[]).filter(q=>q.on!==false);
+// "Early" means the shift starts before noon — the ones you cannot flip straight
+// back to after a run of overnights.
+const isEarly = slot => SLOTS[slot].start < 12;
+// a Spike 3's start comes from the time picked for that day, not the slot table
+const isEarlyAt = (ds, id, slot) => slot==="spk" ? spikeStartHour(ds,id) < 12 : isEarly(slot);
+
+let S = load();
+
+function blankState(){
+  return {v:4, roster:seedRoster(), pto:{}, schedule:{}, months:{}, days:{},
+          nerds:[], nerdAssign:{}, spike:{}, spikeTimes:SEED_SPIKE_TIMES.map(t=>({...t})),
+          rules:{...DEFAULT_RULES},
+          view:{y:new Date().getFullYear(), m:new Date().getMonth()}};
+}
+function load(){
+  try{
+    const raw = localStorage.getItem("shiftBoard.v1");
+    if(!raw) return blankState();
+    const s = JSON.parse(raw);
+    s.rules = {...DEFAULT_RULES, ...(s.rules||{})};
+    if(!s.roster || !s.roster.length) s.roster = seedRoster();
+    s.pto = s.pto||{}; s.schedule = s.schedule||{}; s.months = s.months||{}; s.days = s.days||{};
+    s.nerds = s.nerds||[]; s.nerdAssign = s.nerdAssign||{};
+    s.spike = s.spike||{};
+    if(!Array.isArray(s.spikeTimes) || !s.spikeTimes.length)
+      s.spikeTimes = SEED_SPIKE_TIMES.map(t=>({...t}));
+    // migrate: earlier versions had no preference list
+    s.roster.forEach(d=>{
+      if(!Array.isArray(d.prefs) || !d.prefs.length)
+        d.prefs = (SEED_PREFS[d.initials]||SLOT_ORDER).slice();
+      if(d.blockPref===undefined) d.blockPref = SEED_BLOCK[d.initials]||0;
+    });
+    if(!Array.isArray(s.rules.quotas)){                // pre-editable-rules saves
+      s.rules.quotas = [];
+      const add=(id,count,what,who)=>{ if(count>0) s.rules.quotas.push({id,on:true,kind:"min",count,what,who}); };
+      add("sat", s.rules.minSat, {type:"weekday",weekday:6}, "all");
+      add("sun", s.rules.minSun, {type:"weekday",weekday:0}, "all");
+      add("ins", s.rules.minInsDayOnly, {type:"slot",slot:"ins"}, "dayonly");
+    }
+    ["onPto","onNight","onOneADay","onRecovery"].forEach(k=>{ if(s.rules[k]===undefined) s.rules[k]=true; });
+    if(s.rules.nightToEarlyDays!==undefined){          // pre-step-down saves
+      s.rules.nightEarlyDays = s.rules.nightToEarlyDays;
+      if(s.rules.nightOffDays===undefined) s.rules.nightOffDays = 2;
+      delete s.rules.nightToEarlyDays;
+    }
+    s.view = s.view||{y:new Date().getFullYear(), m:new Date().getMonth()};
+    normaliseRoster(s);
+    return s;
+  }catch(e){ return blankState(); }
+}
+function loadCloudCfg(){
+  try{ return JSON.parse(localStorage.getItem("shiftBoard.cloud")||"null"); }catch(e){ return null; }
+}
+function saveCloudCfg(cfg){
+  try{
+    if(cfg) localStorage.setItem("shiftBoard.cloud", JSON.stringify(cfg));
+    else localStorage.removeItem("shiftBoard.cloud");
+  }catch(e){}
+  Cloud.cfg = cfg;
+}
+/* ============================================================
+   1b. PERSISTENCE
+   Two layers. The browser keeps a copy so the board works offline and feels
+   instant; when a Supabase project is configured the schedule also lives
+   there, which is what makes it survive a new device and reach other people.
+   View and theme stay local — those are yours, not the team's.
+   ============================================================ */
+
+const SHARED_KEYS = ["roster","pto","schedule","months","days","nerds","nerdAssign",
+                     "spike","spikeTimes","rules"];
+const sharedOf = st => { const o={}; SHARED_KEYS.forEach(k=>o[k]=st[k]); return o; };
+
+const Cloud = {
+  cfg:null,            // {url, key, table, id}
+  version:0,
+  lastPushed:null,     // guards against re-sending an unchanged payload
+  status:"local",      // local | saving | saved | offline | conflict | readonly
+  lastError:"",
+  pollT:null,
+  get on(){ return !!(this.cfg && this.cfg.url && this.cfg.key); },
+  headers(extra){
+    return Object.assign({
+      "apikey": this.cfg.key,
+      "Authorization": "Bearer "+this.cfg.key,
+      "Content-Type": "application/json",
+    }, extra||{});
+  },
+  rowUrl(q){
+    const t = encodeURIComponent(this.cfg.table||"schedules");
+    return `${this.cfg.url.replace(/\/+$/,"")}/rest/v1/${t}?id=eq.${encodeURIComponent(this.cfg.id||"default")}${q||""}`;
+  },
+  async fetchRow(){
+    const r = await fetch(this.rowUrl("&select=*"), {headers:this.headers()});
+    if(!r.ok) throw new Error(`${r.status} ${await r.text()}`);
+    const rows = await r.json();
+    return rows[0] || null;
+  },
+  async createRow(){
+    const t = encodeURIComponent(this.cfg.table||"schedules");
+    const r = await fetch(`${this.cfg.url.replace(/\/+$/,"")}/rest/v1/${t}`, {
+      method:"POST",
+      headers:this.headers({"Prefer":"return=representation"}),
+      body:JSON.stringify({id:this.cfg.id||"default", version:1, data:sharedOf(S)}),
+    });
+    if(!r.ok) throw new Error(`${r.status} ${await r.text()}`);
+    const rows = await r.json();
+    this.version = (rows[0]||{}).version || 1;
+    return rows[0];
+  },
+  // Optimistic locking: the update only lands if nobody has written since we read.
+  async push(){
+    if(!this.on) return;
+    const payload = JSON.stringify(sharedOf(S));
+    if(payload === this.lastPushed){ setSync("saved"); return; }
+    setSync("saving");
+    try{
+      const r = await fetch(this.rowUrl(`&version=eq.${this.version}`), {
+        method:"PATCH",
+        headers:this.headers({"Prefer":"return=representation"}),
+        body:JSON.stringify({version:this.version+1, data:sharedOf(S),
+                             updated_at:new Date().toISOString()}),
+      });
+      if(!r.ok) throw new Error(`${r.status} ${await r.text()}`);
+      const rows = await r.json();
+      if(!rows.length){ await this.resolveConflict(); return; }
+      this.version = rows[0].version;
+      this.lastPushed = payload;
+      setSync("saved");
+    }catch(e){
+      this.lastError = String(e.message||e);
+      setSync("offline");
+    }
+  },
+  async resolveConflict(){
+    try{
+      const row = await this.fetchRow();
+      if(row){
+        adoptShared(row.data);
+        this.version = row.version;
+        setSync("conflict");
+        flashBlock("Someone else saved a change — the board has been refreshed to their version");
+        render();
+      }
+    }catch(e){ setSync("offline"); }
+  },
+  async pull({adopt=true}={}){
+    if(!this.on) return null;
+    try{
+      let row = await this.fetchRow();
+      if(!row) row = await this.createRow();
+      if(row && adopt && row.version !== this.version){
+        adoptShared(row.data);
+        this.version = row.version;
+        render();
+      } else if(row){ this.version = row.version; this.lastPushed = JSON.stringify(row.data); }
+      setSync("saved");
+      return row;
+    }catch(e){
+      this.lastError = String(e.message||e);
+      setSync("offline");
+      return null;
+    }
+  },
+  startPolling(){
+    clearInterval(this.pollT);
+    if(!this.on) return;
+    this.pollT = setInterval(()=>{ if(!pendingPush) this.pull(); }, 12000);
+  },
+};
+
+function adoptShared(data){
+  if(!data) return;
+  SHARED_KEYS.forEach(k=>{ if(data[k]!==undefined) S[k]=data[k]; });
+  S.rules = {...DEFAULT_RULES, ...(S.rules||{})};
+  normaliseRoster(S);
+  Cloud.lastPushed = JSON.stringify(sharedOf(S));   // already what the server holds
+  saveLocal();
+}
+function normaliseRoster(st){
+  (st.roster||[]).forEach(d=>{
+    if(!Array.isArray(d.prefs) || !d.prefs.length)
+      d.prefs = (SEED_PREFS[d.initials]||SLOT_ORDER).slice();
+    if(d.blockPref===undefined) d.blockPref = SEED_BLOCK[d.initials]||0;
+  });
+}
+
+let storageBlocked = false;
+function saveLocal(){
+  try{
+    localStorage.setItem("shiftBoard.v1", JSON.stringify(S));
+    if(storageBlocked){ storageBlocked=false; setSync(Cloud.on?Cloud.status:"local"); }
+  }catch(e){
+    // Sandboxed previews and some private modes refuse storage outright. Say so
+    // rather than silently dropping the month.
+    storageBlocked = true;
+    setSync("blocked");
+  }
+}
+
+let saveT=null, pendingPush=false;
+function save(){
+  clearTimeout(saveT);
+  pendingPush = true;
+  saveT=setTimeout(async ()=>{
+    saveLocal();
+    if(Cloud.on) await Cloud.push();
+    pendingPush = false;
+  },600);
+}
+
+const SYNC_TEXT = {
+  local:    ["Saved on this device", "This browser only — set up sharing in Data"],
+  saving:   ["Saving…", ""],
+  saved:    ["Saved for everyone", ""],
+  offline:  ["Not syncing", "Changes are held on this device"],
+  conflict: ["Refreshed", "Someone else saved first"],
+  blocked:  ["Not saving", "This browser is blocking storage — export a backup"],
+};
+function setSync(st){
+  Cloud.status = st;
+  const n = document.getElementById("syncPill");
+  if(!n) return;
+  const [t, sub] = SYNC_TEXT[st] || SYNC_TEXT.local;
+  n.textContent = t;
+  n.title = sub || t;
+  n.className = "syncpill s-"+st;
+}
+
+/* ============================================================
+   2. DATE + LOOKUP HELPERS
+   ============================================================ */
+
+const pad=n=>String(n).padStart(2,"0");
+const iso=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const fromIso=s=>{const[a,b,c]=s.split("-").map(Number);return new Date(a,b-1,c);};
+const addDays=(s,n)=>{const d=fromIso(s);d.setDate(d.getDate()+n);return iso(d);};
+const dowOf=s=>fromIso(s).getDay();
+const fmtShort=s=>{const d=fromIso(s);return `${DOW3[d.getDay()]} ${d.getMonth()+1}/${d.getDate()}`;};
+
+const monthKey = (y,m)=> `${y}-${pad(m+1)}`;
+// A month may override the standard weekday shape (November's extra 12p-12a, say).
+function templateFor(y,m){
+  const o = S.months[monthKey(y,m)];
+  return (o && o.tpl) ? o.tpl : TEMPLATE;
+}
+// A single date can override its month, which in turn can override the standard
+// weekday shape. Most specific wins.
+function slotsFor(dateStr){
+  const own = (S.days||{})[dateStr];
+  if(own) return SLOT_ORDER.filter(k=>own.includes(k));
+  const d = fromIso(dateStr);
+  const tpl = templateFor(d.getFullYear(), d.getMonth());
+  const set = new Set(tpl[d.getDay()] || []);
+  return SLOT_ORDER.filter(k=>set.has(k));
+}
+const dayIsCustom = ds => !!(S.days||{})[ds];
+// What this date would run if it had no override of its own.
+function monthShapeFor(dateStr){
+  const d = fromIso(dateStr);
+  const tpl = templateFor(d.getFullYear(), d.getMonth());
+  const set = new Set(tpl[d.getDay()] || []);
+  return SLOT_ORDER.filter(k=>set.has(k));
+}
+function setDaySlots(dateStr, list){
+  S.days = S.days || {};
+  const base = monthShapeFor(dateStr);
+  const next = SLOT_ORDER.filter(k=>list.includes(k));
+  if(next.length===base.length && next.every((k,i)=>k===base[i])) delete S.days[dateStr];
+  else S.days[dateStr] = next;
+}
+// A working copy of the current month's shape, created on first edit.
+function ensureMonthTpl(y,m){
+  const k = monthKey(y,m);
+  if(!S.months[k]) S.months[k] = {};
+  if(!S.months[k].tpl){
+    S.months[k].tpl = {};
+    for(let w=0;w<7;w++) S.months[k].tpl[w] = TEMPLATE[w].slice();
+  }
+  return S.months[k].tpl;
+}
+const docById = id => S.roster.find(d=>d.id===id) || null;
+const activeRoster = () => S.roster.filter(d=>d.active);
+
+function assign(dateStr, slot, id){
+  if(!S.schedule[dateStr]) S.schedule[dateStr] = {};
+  if(id) S.schedule[dateStr][slot] = id;
+  else { delete S.schedule[dateStr][slot]; clearNerds(dateStr, slot); }
+  if(!Object.keys(S.schedule[dateStr]).length) delete S.schedule[dateStr];
+  save();
+}
+const at = (dateStr, slot) => (S.schedule[dateStr]||{})[slot] || null;
+function shiftsOn(dateStr, id){
+  const day = S.schedule[dateStr]||{};
+  const out = Object.keys(day).filter(k=>day[k]===id);
+  if(docSpike(dateStr,id)) out.push("spk");   // counts for the rules, not for coverage
+  return out;
+}
+function isPTO(id, dateStr){ return !!(S.pto[id]||[]).includes(dateStr); }
+
+function monthDays(y,m){
+  const out=[]; const d=new Date(y,m,1);
+  while(d.getMonth()===m){ out.push(iso(d)); d.setDate(d.getDate()+1); }
+  return out;
+}
+// Full grid including leading/trailing days so weeks are whole.
+function gridDays(y,m){
+  const first=new Date(y,m,1), last=new Date(y,m+1,0);
+  const start=new Date(first); start.setDate(1-first.getDay());
+  const end=new Date(last); end.setDate(last.getDate()+(6-last.getDay()));
+  const out=[]; const d=new Date(start);
+  while(d<=end){ out.push(iso(d)); d.setDate(d.getDate()+1); }
+  return out;
+}
+
+/* ============================================================
+   3. RULE ENGINE
+   Hard rules block placement. Soft rules warn.
+   ============================================================ */
+
+function consecutiveNightsIfPlaced(id, dateStr){
+  let n=1, c=dateStr;
+  while(true){ c=addDays(c,-1); if(at(c,"noc")===id) n++; else break; }
+  c=dateStr;
+  while(true){ c=addDays(c,1); if(at(c,"noc")===id) n++; else break; }
+  return n;
+}
+function consecutiveDaysIfPlaced(id, dateStr){
+  const worked = s => shiftsOn(s,id).length>0;
+  let n=1, c=dateStr;
+  while(true){ c=addDays(c,-1); if(worked(c)) n++; else break; }
+  c=dateStr;
+  while(true){ c=addDays(c,1); if(worked(c)) n++; else break; }
+  return n;
+}
+
+// Hard rules. Deliberately free of any month-wide aggregate so the solver can
+// call this hundreds of thousands of times without recomputing stats().
+function hardCheck(id, dateStr, slot, ignoreSelf){
+  const doc = docById(id); const out=[];
+  if(!doc) return out;
+  const sl = SLOTS[slot];
+
+  if(S.rules.onPto!==false && isPTO(id,dateStr))
+    out.push({level:"hard", code:"pto", msg:`${id} requested ${fmtShort(dateStr)} off`});
+
+  if(S.rules.onNight!==false && sl.overnight && !doc.nightOK)
+    out.push({level:"hard", code:"night", msg:`${id} does not work overnights`});
+
+  const already = S.rules.onOneADay===false ? []
+    : shiftsOn(dateStr,id).filter(k=> ignoreSelf===false ? true : k!==slot);
+  if(already.length)
+    out.push({level:"hard", code:"double", msg:`${id} already has ${SLOTS[already[0]].label} on ${fmtShort(dateStr)}`});
+
+  /* Coming off overnights, recovery steps down rather than switching on:
+       days 1-2  no shift at all
+       day 3     back on, but nothing starting before noon
+       day 4+    anything
+     Consecutive overnights are untouched — the clock starts at the last night
+     of a run, not the first. */
+  const rec = S.rules.onRecovery!==false;
+  const off = rec ? (S.rules.nightOffDays|0) : 0, early = rec ? (S.rules.nightEarlyDays|0) : 0;
+
+  if(!sl.overnight){
+    let flagged = false;
+    for(let k=1;k<=off;k++){
+      if(at(addDays(dateStr,-k),"noc")===id){
+        out.push({level:"hard", code:"nightrec",
+          msg:`${id} worked the overnight ${fmtShort(addDays(dateStr,-k))} — the ${off} days after are fully off`});
+        flagged = true; break;
+      }
+    }
+    if(!flagged && isEarly(slot)){
+      for(let k=off+1;k<=early;k++){
+        if(at(addDays(dateStr,-k),"noc")===id){
+          out.push({level:"hard", code:"nightearly",
+            msg:`${id} came off an overnight ${fmtShort(addDays(dateStr,-k))} — nothing starting before noon until day ${early+1}`});
+          break;
+        }
+      }
+    }
+  }
+
+  // Same rule looking forward, so you cannot drop a night in front of a shift
+  // the doctor already holds.
+  if(sl.overnight){
+    for(let k=1;k<=Math.max(off,early);k++){
+      const nx = addDays(dateStr,k), day = S.schedule[nx]||{};
+      if(day.noc===id) break;                    // run continues; the later night governs
+      const held = Object.keys(day).filter(x=>day[x]===id);
+      if(!held.length) continue;
+      if(k<=off){
+        out.push({level:"hard", code:"nightrec",
+          msg:`${id} is on ${SLOTS[held[0]].label} ${fmtShort(nx)}, inside the ${off} days off after an overnight`});
+        break;
+      }
+      const e = held.filter(x=>isEarlyAt(nx, id, x));
+      if(e.length){
+        out.push({level:"hard", code:"nightearly",
+          msg:`${id} is on ${SLOTS[e[0]].label} ${fmtShort(nx)}, too early after an overnight`});
+        break;
+      }
+    }
+  }
+  return out;
+}
+const hardOK = (id,ds,slot)=> hardCheck(id,ds,slot,true).length===0;
+
+// Soft rules that depend only on neighbouring days, not on month totals.
+function softCheck(id, dateStr, slot){
+  const doc = docById(id); const out=[];
+  if(!doc) return out;
+  const sl = SLOTS[slot], w = dowOf(dateStr);
+
+  for(const r of (doc.restrictions||[])){
+    if(!r.days.includes(w)) continue;
+    if(r.slots==="all" || (r.slots==="late" && (sl.kind==="late"||sl.kind==="night"))){
+      const what = r.slots==="late" ? `late ${DOW[w]}s` : `${DOW[w]}s`;
+      out.push({level:"soft", code:"restrict", msg:`${id} does not take ${what}`});
+    }
+  }
+  if(sl.overnight){
+    const n = consecutiveNightsIfPlaced(id,dateStr);
+    if(n > S.rules.maxConsecNights)
+      out.push({level:"soft", code:"consecnight", msg:`${n} overnights in a row for ${id} (cap ${S.rules.maxConsecNights})`});
+  }
+  const cd = consecutiveDaysIfPlaced(id,dateStr);
+  if(cd > S.rules.maxConsecDays)
+    out.push({level:"soft", code:"consecday", msg:`${cd} days worked in a row for ${id} (cap ${S.rules.maxConsecDays})`});
+  return out;
+}
+
+// Where in a doctor's ranking this shift sits. 1 = top choice, 0 = last.
+function prefRank(doc, slot){
+  const p = doc.prefs || [];
+  const i = p.indexOf(slot);
+  if(i < 0) return 0.5;
+  return p.length<2 ? 1 : 1 - i/(p.length-1);
+}
+
+// Returns [{level:"hard"|"soft", code, msg}] — the full picture, for the UI.
+function checkPlacement(id, dateStr, slot, {ignoreSelf=true}={}){
+  const doc = docById(id);
+  if(!doc) return [];
+  const out = [...hardCheck(id,dateStr,slot,ignoreSelf), ...softCheck(id,dateStr,slot)];
+  if(S.rules.warnOverTarget){
+    const st = stats()[id];
+    if(st){
+      const cur = at(dateStr,slot)===id ? st.shifts : st.shifts+1;
+      if(cur > doc.target)
+        out.push({level:"soft", code:"overtarget", msg:`puts ${id} at ${cur} of ${doc.target} preferred`});
+    }
+  }
+  return out;
+}
+
+/* ============================================================
+   3b. AUTO-FILL
+   A local solver, not a language model — it enumerates every open slot and
+   scores every legal doctor for it. Hard rules are absolute: a slot is left
+   OPEN rather than filled illegally.
+   ============================================================ */
+
+const WEIGHTS = {
+  need:        12,   // per shift still owed against their preferred total
+  overshoot:  -55,   // flat penalty once a doctor is at or past target
+  pref:        34,   // full weight of a top-ranked shift type
+  wkndEquity:  -7,   // per weekend shift above the roster average
+  ovnEquity:   -5,   // per overnight above the average of night-eligible docs
+  restrict:   -45,   // blocked weekday
+  consecNight:-28,
+  consecDay:  -20,
+  otherSoft:  -10,
+  continuity:  10,   // same slot as yesterday — real schedules run in blocks
+  longRun:     -8,   // per day beyond 3 worked in a row
+  sameType:    -7,   // per repeat of one slot type past that doctor's allowance,
+                     // so nobody spends a whole month on a single shift
+  quota:       70,   // per outstanding monthly minimum this slot would satisfy
+  blockKeep:   22,   // extending a run toward the length this doctor likes
+  blockOver:  -18,   // per day past it
+  blockLone:  -14,   // an isolated single shift for someone who prefers runs
+};
+const workedDay = (id, ds)=> shiftsOn(ds,id).length>0;
+// Some doctors want 3 or 4 shifts together then a proper break; others want
+// them spread out one at a time. blockPref is that number, 0 for no preference.
+function clusterScore(doc, ds){
+  const P = doc.blockPref|0;
+  if(!P) return 0;
+  const before = workedDay(doc.id, addDays(ds,-1));
+  const after  = workedDay(doc.id, addDays(ds,1));
+  if(P === 1) return (before||after) ? WEIGHTS.blockOver : 0;
+  const run = consecutiveDaysIfPlaced(doc.id, ds);
+  if(run > P) return (run-P) * WEIGHTS.blockOver;
+  return (before||after) ? WEIGHTS.blockKeep : WEIGHTS.blockLone;
+}
+// How many of one shift type a doctor can take before repetition starts costing.
+// Scales with how highly they rank it, so a dedicated nocturnist still gets
+// nights while a generalist gets a spread.
+function sameTypeAllowance(doc, slot){
+  const strong = S.rules.prefStrength==="strong";
+  return 2 + Math.round(prefRank(doc,slot)*5) + (SLOTS[slot].overnight ? 3 : 0) + (strong?4:0);
+}
+
+function autofill({mode="open", allowOvershoot=true} = {}){
+  const y=S.view.y, m=S.view.m;
+  const days = monthDays(y,m);
+  const roster = activeRoster();
+  if(!roster.length) return {filled:0, open:0, cleared:0, unfilled:[], before:0};
+
+  let cleared = 0;
+  if(mode==="rebuild"){
+    for(const ds of days){
+      for(const slot of slotsFor(ds)) if(at(ds,slot)){ assign(ds,slot,null); cleared++; }
+    }
+  }
+
+  // live counters, so the scorer never has to recompute month aggregates
+  const cnt = {};
+  const QR = activeQuotas();
+  roster.forEach(d=> cnt[d.id]={shifts:0,wknd:0,ovn:0,byType:{},q:{}});
+  for(const ds of days){
+    const isW = S.rules.weekendDays.includes(dowOf(ds)), w = dowOf(ds);
+    for(const slot of slotsFor(ds)){
+      const id = at(ds,slot);
+      if(!id || !cnt[id]) continue;
+      const c = cnt[id];
+      c.shifts++; if(isW) c.wknd++; if(SLOTS[slot].overnight) c.ovn++;
+      for(const r of QR) if(quotaMatches(r,ds,slot)) c.q[r.id]=(c.q[r.id]||0)+1;
+      c.byType[slot] = (c.byType[slot]||0)+1;
+    }
+  }
+  const before = Object.values(cnt).reduce((a,b)=>a+b.shifts,0);
+
+  // every empty slot, hardest to staff first: overnights, then weekends, then
+  // whichever slot type has the fewest eligible doctors overall
+  const eligibleCount = {};
+  for(const k of SLOT_ORDER)
+    eligibleCount[k] = roster.filter(d=> !SLOTS[k].overnight || d.nightOK).length;
+
+  const todo = [];
+  for(const ds of days){
+    const isW = S.rules.weekendDays.includes(dowOf(ds));
+    for(const slot of slotsFor(ds)){
+      if(at(ds,slot)) continue;
+      todo.push({ds, slot, isW,
+        rank: (SLOTS[slot].overnight?0:1)*100 + eligibleCount[slot] + (isW?0:5) });
+    }
+  }
+  todo.sort((a,b)=> a.rank-b.rank || a.ds.localeCompare(b.ds) || SLOT_ORDER.indexOf(a.slot)-SLOT_ORDER.indexOf(b.slot));
+
+  // "strong" leans hard on each doctor's ranking, which reproduces specialists
+  // (a nocturnist taking most of the nights). "balanced" spreads the load.
+  const K = S.rules.prefStrength==="strong" ? {pref:2.9, equity:0.4} : {pref:1, equity:1};
+  const nightDocs = roster.filter(d=>d.nightOK).length || 1;
+  const totalSlots = days.reduce((n,ds)=>n+slotsFor(ds).length, 0);
+  const wkndSlots  = days.filter(ds=>S.rules.weekendDays.includes(dowOf(ds)))
+                         .reduce((n,ds)=>n+slotsFor(ds).length,0);
+  const ovnSlots   = days.length;
+  const avgWknd = wkndSlots/roster.length;
+  const avgOvn  = ovnSlots/nightDocs;
+
+  function score(doc, ds, slot, isW, strictMax){
+    if(!hardOK(doc.id, ds, slot)) return null;
+    // a maximum is respected outright unless the slot would otherwise stay open
+    if(strictMax && quotaOver(doc, ds, slot)) return null;
+    const c = cnt[doc.id];
+    let sc = 0;
+    const need = doc.target - c.shifts;
+    sc += need * WEIGHTS.need;
+    if(need <= 0){
+      if(!allowOvershoot) return null;
+      sc += WEIGHTS.overshoot;
+    }
+    sc += prefRank(doc, slot) * WEIGHTS.pref * K.pref;
+    if(isW) sc += (c.wknd - avgWknd) * WEIGHTS.wkndEquity * K.equity;
+    if(SLOTS[slot].overnight) sc += (c.ovn - avgOvn) * WEIGHTS.ovnEquity * K.equity;
+    for(const v of softCheck(doc.id, ds, slot)){
+      sc += v.code==="restrict"    ? WEIGHTS.restrict
+          : v.code==="consecnight" ? WEIGHTS.consecNight
+          : v.code==="consecday"   ? WEIGHTS.consecDay
+          : WEIGHTS.otherSoft;
+    }
+    if(at(addDays(ds,-1), slot) === doc.id) sc += WEIGHTS.continuity;
+    const run = consecutiveDaysIfPlaced(doc.id, ds);
+    if(run > 3) sc += (run-3) * WEIGHTS.longRun;
+    const same = c.byType[slot] || 0;
+    const allow = sameTypeAllowance(doc, slot);
+    if(same > allow) sc += (same-allow) * WEIGHTS.sameType;
+    sc += quotaGain(doc, ds, slot) * WEIGHTS.quota;
+    sc -= quotaOver(doc, ds, slot) * WEIGHTS.quota;
+    sc += clusterScore(doc, ds);
+    return sc;
+  }
+
+  const place = (ds,slot,id,isW)=>{
+    assign(ds,slot,id);
+    const c=cnt[id], w=dowOf(ds);
+    c.shifts++; if(isW) c.wknd++; if(SLOTS[slot].overnight) c.ovn++;
+    for(const r of QR) if(quotaMatches(r,ds,slot)) c.q[r.id]=(c.q[r.id]||0)+1;
+    c.byType[slot]=(c.byType[slot]||0)+1;
+  };
+  const unplace = (ds,slot,id,isW)=>{
+    assign(ds,slot,null);
+    const c=cnt[id], w=dowOf(ds);
+    c.shifts--; if(isW) c.wknd--; if(SLOTS[slot].overnight) c.ovn--;
+    for(const r of QR) if(quotaMatches(r,ds,slot)) c.q[r.id]=(c.q[r.id]||1)-1;
+    c.byType[slot]=(c.byType[slot]||1)-1;
+  };
+  // how many outstanding monthly minimums this placement would chip away at
+  // how many outstanding minimums this placement would chip away at
+  const quotaGain = (doc, ds, slot)=>{
+    const c=cnt[doc.id]; let g=0;
+    for(const r of QR){
+      if(r.kind!=="min" || !whoMatches(r,doc) || !quotaMatches(r,ds,slot)) continue;
+      if((c.q[r.id]||0) < r.count) g++;
+    }
+    return g;
+  };
+  // and how far past a maximum it would push them
+  const quotaOver = (doc, ds, slot)=>{
+    const c=cnt[doc.id]; let o=0;
+    for(const r of QR){
+      if(r.kind!=="max" || !whoMatches(r,doc) || !quotaMatches(r,ds,slot)) continue;
+      if((c.q[r.id]||0) >= r.count) o++;
+    }
+    return o;
+  };
+  // shifts this doctor still owes across every minimum
+  const quotaShort = doc => QR.reduce((n,r)=>
+    n + (r.kind==="min" && whoMatches(r,doc)
+         ? Math.max(0, r.count - (cnt[doc.id].q[r.id]||0)) : 0), 0);
+  // would taking this shift off the holder drop them under a minimum?
+  const quotaNeeded = (doc, ds, slot)=>{
+    const c=cnt[doc.id];
+    for(const r of QR){
+      if(r.kind!=="min" || !whoMatches(r,doc) || !quotaMatches(r,ds,slot)) continue;
+      if((c.q[r.id]||0) <= r.count) return true;
+    }
+    return false;
+  };
+
+  // Pass one: hand out the shifts that satisfy an outstanding monthly minimum,
+  // neediest doctor first. Greedy fill alone tends to strand the last doctor.
+  for(let round=0; round<8; round++){
+    const short = roster
+      .map(d=>({d, need:quotaShort(d)}))
+      .filter(x=>x.need>0)
+      .sort((a,b)=> b.need-a.need);
+    if(!short.length) break;
+    let progress = 0;
+    for(const {d} of short){
+      let pick=null, pickScore=-Infinity;
+      for(const t of todo){
+        if(at(t.ds,t.slot)) continue;
+        if(!quotaGain(d, t.ds, t.slot)) continue;
+        const sc = score(d, t.ds, t.slot, t.isW, true);
+        if(sc!==null && sc>pickScore){ pickScore=sc; pick=t; }
+      }
+      if(pick){ place(pick.ds, pick.slot, d.id, pick.isW); progress++; }
+    }
+    if(!progress) break;
+  }
+
+  const unfilled = [];
+  for(const t of todo){
+    if(at(t.ds,t.slot)) continue;
+    let best=null, bestScore=-Infinity;
+    for(const strict of [true,false]){          // relax maximums only if we must
+      for(const doc of roster){
+        const sc = score(doc, t.ds, t.slot, t.isW, strict);
+        if(sc===null) continue;
+        if(sc > bestScore){ bestScore=sc; best=doc; }
+      }
+      if(best) break;
+    }
+    if(best) place(t.ds, t.slot, best.id, t.isW);
+    else unfilled.push({ds:t.ds, slot:t.slot});
+  }
+
+  // Balancing pass — hand shifts from doctors past their target to doctors
+  // short of it, wherever that is legal and does not worsen preference much.
+  for(let pass=0; pass<3; pass++){
+    let moved = 0;
+    const short = roster.filter(d=> cnt[d.id].shifts < d.target)
+                        .sort((a,b)=> (cnt[a.id].shifts-a.target) - (cnt[b.id].shifts-b.target));
+    for(const doc of short){
+      if(cnt[doc.id].shifts >= doc.target) continue;
+      let take=null, takeScore=-Infinity;
+      for(const ds of days){
+        const isW = S.rules.weekendDays.includes(dowOf(ds));
+        for(const slot of slotsFor(ds)){
+          const holder = at(ds,slot);
+          if(!holder || holder===doc.id) continue;
+          const h = docById(holder);
+          if(!h || !cnt[holder] || cnt[holder].shifts <= h.target) continue;
+          if(quotaGain(h, ds, slot)) continue;              // holder still needs it
+          if(quotaNeeded(h, ds, slot)) continue;            // taking it drops them under
+          unplace(ds,slot,holder,isW);
+          const sc = score(doc, ds, slot, isW, true);
+          if(sc!==null && sc>takeScore){ takeScore=sc; take={ds,slot,holder,isW}; }
+          place(ds,slot,holder,isW);
+        }
+      }
+      if(take){
+        unplace(take.ds,take.slot,take.holder,take.isW);
+        place(take.ds,take.slot,doc.id,take.isW);
+        moved++;
+      }
+    }
+    if(!moved) break;
+  }
+
+  // Quota repair — hand a weekend or ins shift from someone with a surplus to
+  // someone still short, wherever that is legal.
+  for(let pass=0; pass<3; pass++){
+    let moved = 0;
+    for(const doc of roster){
+      const wants = QR.filter(r=> r.kind==="min" && whoMatches(r,doc)
+                                  && (cnt[doc.id].q[r.id]||0) < r.count);
+      for(const want of wants){
+        let take=null, takeScore=-Infinity;
+        for(const ds of days){
+          const isW = S.rules.weekendDays.includes(dowOf(ds));
+          for(const slot of slotsFor(ds)){
+            if(!quotaMatches(want, ds, slot)) continue;
+            const holder = at(ds,slot);
+            if(!holder || holder===doc.id || !cnt[holder]) continue;
+            const h = docById(holder); if(!h) continue;
+            if(quotaNeeded(h, ds, slot)) continue;   // holder would drop below a minimum
+            unplace(ds,slot,holder,isW);
+            const sc = score(doc, ds, slot, isW, true);
+            if(sc!==null && sc>takeScore){ takeScore=sc; take={ds,slot,holder,isW}; }
+            place(ds,slot,holder,isW);
+          }
+        }
+        if(take){
+          unplace(take.ds,take.slot,take.holder,take.isW);
+          place(take.ds,take.slot,doc.id,take.isW);
+          moved++;
+        }
+      }
+    }
+    if(!moved) break;
+  }
+
+  // Last look at anything still open, now that the board has shifted around.
+  const stillOpen = [];
+  for(const u of unfilled){
+    if(at(u.ds,u.slot)) continue;
+    const isW = S.rules.weekendDays.includes(dowOf(u.ds));
+    let best=null, bestScore=-Infinity;
+    for(const strict of [true,false]){
+      for(const doc of roster){
+        const sc = score(doc, u.ds, u.slot, isW, strict);
+        if(sc!==null && sc>bestScore){ bestScore=sc; best=doc; }
+      }
+      if(best) break;
+    }
+    if(best) place(u.ds,u.slot,best.id,isW);
+    else stillOpen.push(u);
+  }
+
+  const after = Object.values(cnt).reduce((a,b)=>a+b.shifts,0);
+  save();
+  return {
+    placed: after-before, cleared, before, totalSlots,
+    filled: after, open: totalSlots-after, unfilled: stillOpen,
+    onTarget: roster.filter(d=>cnt[d.id].shifts===d.target).length,
+    rosterN: roster.length,
+    unmet: quotaCheck(y,m),
+    capacity: quotaCapacity(y,m),
+  };
+}
+
+/* ============================================================
+   4. AGGREGATES
+   ============================================================ */
+
+let _statCache=null, _statKey="";
+function stats(){
+  const key = S.view.y+"-"+S.view.m+"|"+JSON.stringify(S.schedule).length
+            +"|"+JSON.stringify(S.spike||{}).length+"|"+_dirty;
+  if(_statCache && _statKey===key) return _statCache;
+  const days = monthDays(S.view.y,S.view.m);
+  const out={};
+  activeRoster().forEach(d=>out[d.id]={shifts:0,wknd:0,ovn:0,pto:0,target:d.target});
+  for(const ds of days){
+    const day = S.schedule[ds]||{};
+    const isWknd = S.rules.weekendDays.includes(dowOf(ds));
+    for(const k in day){
+      const id=day[k]; if(!out[id]) continue;
+      out[id].shifts++;
+      if(isWknd) out[id].wknd++;
+      if(SLOTS[k] && SLOTS[k].overnight) out[id].ovn++;
+    }
+    for(const e of spikeOn(ds)){          // worked, so it shows in their load
+      if(!e.doc || !out[e.doc]) continue;
+      out[e.doc].shifts++;
+      if(isWknd) out[e.doc].wknd++;
+    }
+    for(const id in out) if(isPTO(id,ds)) out[id].pto++;
+  }
+  _statCache=out; _statKey=key;
+  return out;
+}
+let _dirty=0;
+const touch = ()=>{ _dirty++; };
+
+/* Monthly minimums. These are not placement rules — you cannot break one by
+   putting a doctor somewhere. They are quotas the finished month either meets
+   or does not, so they are measured over the whole month. */
+// Count, for every doctor, how many shifts fall under each active quota rule.
+function tallies(y,m){
+  const days = monthDays(y,m), rules = activeQuotas(), out = {};
+  activeRoster().forEach(d=>{ out[d.id]={}; rules.forEach(r=> out[d.id][r.id]=0); });
+  for(const ds of days){
+    for(const slot of slotsFor(ds)){
+      const id = at(ds,slot);
+      if(!id || !out[id]) continue;
+      for(const r of rules) if(quotaMatches(r, ds, slot)) out[id][r.id]++;
+    }
+  }
+  // a weekday rule counts days worked, not shifts — a doctor cannot work a
+  // Saturday twice, but the loop above would count each matching slot once anyway
+  return out;
+}
+function quotaCheck(y,m){
+  const t = tallies(y,m), out = [];
+  for(const r of activeQuotas()){
+    for(const d of activeRoster()){
+      if(!whoMatches(r,d)) continue;
+      const have = (t[d.id]||{})[r.id] || 0;
+      if(r.kind==="min" && r.count>0 && have < r.count)
+        out.push({id:d.id, rule:r.id, code:"min", short:r.count-have,
+          msg:`${d.id} has ${have} of ${r.count} required ${quotaUnit(r)}`});
+      if(r.kind==="max" && have > r.count)
+        out.push({id:d.id, rule:r.id, code:"max", short:have-r.count,
+          msg:`${d.id} has ${have} ${quotaUnit(r)}, over the limit of ${r.count}`});
+    }
+  }
+  return out;
+}
+function quotaUnit(r){
+  const w = r.what||{};
+  return w.type==="weekday" ? `${DOW[w.weekday]}s`
+       : w.type==="slot"    ? SLOTS[w.slot].label
+       : "shifts";
+}
+// Whether a minimum is even reachable this month, as pure arithmetic.
+function quotaCapacity(y,m){
+  const days = monthDays(y,m);
+  const rows = [];
+  for(const r of activeQuotas()){
+    if(r.kind!=="min" || !r.count) continue;
+    const people = activeRoster().filter(d=>whoMatches(r,d));
+    let slots = 0;
+    for(const ds of days) for(const slot of slotsFor(ds)) if(quotaMatches(r,ds,slot)) slots++;
+    const need = people.length * r.count;
+    rows.push({rule:r, slots, need, n:people.length,
+      fits: slots>=need, maxDocs: Math.floor(slots/r.count)});
+  }
+  return rows;
+}
+// Whether the month can even satisfy the weekend minimums, as pure arithmetic.
+function monthAudit(){
+  const days = monthDays(S.view.y,S.view.m);
+  let total=0, filled=0, open=0;
+  const issues=[]; const cellFlags={};
+  for(const ds of days){
+    for(const slot of slotsFor(ds)){
+      total++;
+      const id = at(ds,slot);
+      if(!id){ open++; continue; }
+      filled++;
+      const v = checkPlacement(id, ds, slot);
+      if(v.length){
+        const worst = v.some(x=>x.level==="hard") ? "hard":"soft";
+        cellFlags[ds+"|"+slot] = {level:worst, list:v};
+        v.forEach(x=>issues.push({...x, date:ds, slot, id}));
+      }
+    }
+  }
+  issues.sort((a,b)=> (a.level===b.level? a.date.localeCompare(b.date) : (a.level==="hard"?-1:1)));
+  const quotas = quotaCheck(S.view.y, S.view.m);
+  return {total, filled, open, issues, cellFlags, quotas,
+          hard:issues.filter(i=>i.level==="hard").length,
+          soft:issues.filter(i=>i.level==="soft").length,
+          unmet:quotas.length};
+}
+
+/* ============================================================
+   5. RENDER
+   ============================================================ */
+
+let armed = null;
+const $  = s => document.querySelector(s);
+const el = (t,c,txt)=>{const n=document.createElement(t); if(c)n.className=c; if(txt!=null)n.textContent=txt; return n;};
+
+function render(){
+  touch();
+  const audit = monthAudit();
+  renderKpis(audit);
+  renderCal(audit);
+  renderRoster();
+  renderIssues(audit);
+  $("#mLabel").textContent = new Date(S.view.y,S.view.m,1)
+      .toLocaleDateString(undefined,{month:"long",year:"numeric"});
+  $("#calTitle").textContent = new Date(S.view.y,S.view.m,1)
+      .toLocaleDateString(undefined,{month:"long",year:"numeric"});
+  $("#calHint").textContent = `${audit.filled} of ${audit.total} slots filled`;
+  saveLocal();          // never Cloud.push() — rendering is not an edit
+}
+
+function renderKpis(a){
+  const st = stats();
+  const targetSum = activeRoster().reduce((s,d)=>s+ (+d.target||0), 0);
+  const pct = a.total? Math.round(a.filled/a.total*100):0;
+  const cap = targetSum - a.total;
+
+  const host = $("#kpis"); host.innerHTML="";
+  host.appendChild(tile({
+    lab:"Slots filled", val:a.filled, of:` / ${a.total}`,
+    note:`${pct}% of the month covered`,
+    meter:{pct, cls: a.filled>=a.total?"done":""}
+  }));
+  host.appendChild(tile({
+    lab:"OPEN shifts", val:a.open, cls: a.open? "warnt":"clear",
+    note: a.open ? "unfilled — needs coverage" : "fully covered"
+  }));
+  host.appendChild(tile({
+    lab:"Rule violations", val:a.hard, cls: a.hard? "alert":"clear",
+    note: a.hard ? "hard rules broken" : "no hard rules broken"
+  }));
+  host.appendChild(tile({
+    lab:"Capacity vs demand", val:(cap>=0?"+":"")+cap,
+    cls: cap<0 ? "alert":"clear",
+    note: cap>=0
+      ? `${targetSum} preferred shifts for ${a.total} slots`
+      : `short ${Math.abs(cap)} shifts of preferred capacity`
+  }));
+}
+function tile({lab,val,of,note,cls,meter}){
+  const t = el("div","tile"+(cls?" "+cls:""));
+  t.appendChild(el("div","lab",lab));
+  const v = el("div","val"); v.textContent = val;
+  if(of){ const o=el("span","of",of); v.appendChild(o); }
+  t.appendChild(v);
+  if(note) t.appendChild(el("div","note",note));
+  if(meter){
+    const m = el("div","meter"+(meter.cls?" "+meter.cls:""));
+    const i = el("i"); i.style.width = Math.min(100,meter.pct)+"%";
+    m.appendChild(i); t.appendChild(m);
+  }
+  return t;
+}
+
+function renderCal(audit){
+  const cal = $("#cal"); cal.innerHTML="";
+  DOW.forEach((d,i)=>{
+    const h = el("div","dow"+([0,6].includes(i)?" we":""), d);
+    cal.appendChild(h);
+  });
+  const todayIso = iso(new Date());
+  const week = [];
+  for(const ds of gridDays(S.view.y,S.view.m)){
+    const d = fromIso(ds);
+    const inMonth = d.getMonth()===S.view.m;
+    const w = d.getDay();
+    const cell = el("div","day"+(inMonth?"":" out")+([0,6].includes(w)?" we":"")+(ds===todayIso?" today":""));
+
+    const hd = el("div","day-h");
+    if(inMonth){
+      const nBtn = el("button","day-n"+(dayIsCustom(ds)?" custom":""), String(d.getDate()));
+      nBtn.title = dayIsCustom(ds)
+        ? "This day has its own set of shifts — click to change"
+        : "Add or remove shifts for this day";
+      nBtn.addEventListener("click", ()=> openDaySetup(ds));
+      hd.appendChild(nBtn);
+    } else {
+      hd.appendChild(el("span","day-n", String(d.getDate())));
+    }
+    hd.appendChild(el("span","day-dow", DOW3[w]));
+    const slots = slotsFor(ds);
+    if(inMonth){
+      const filled = slots.filter(s=>at(ds,s)).length;
+      hd.appendChild(el("span","day-cnt"+(filled<slots.length?" short":""), `${filled}/${slots.length}`));
+    }
+    cell.appendChild(hd);
+
+    if(inMonth){
+      // OFF strip — each name is a toggle, and "+" opens the whole day
+      const o = el("div","off-line");
+      const offList = activeRoster().filter(x=>isPTO(x.id,ds));
+      if(offList.length) o.appendChild(el("b","","OFF"));
+      for(const doc of offList){
+        const clash = shiftsOn(ds, doc.id).length>0;
+        const c = el("button","offchip"+(clash?" clash":""), doc.initials);
+        c.title = clash
+          ? `${doc.initials} requested this day off but is still on ${SLOTS[shiftsOn(ds,doc.id)[0]].label} — click to cancel the request`
+          : `${doc.initials} requested ${fmtShort(ds)} off — click to make them available again`;
+        c.addEventListener("click", ()=>{ setReq(doc.id, ds, false); save(); render(); });
+        o.appendChild(c);
+      }
+      // phone-only: Spike 3 rides in the day cell since the lane is hidden there
+      const sl = spikeOn(ds);
+      if(sl.length){
+        const si = el("button","spkinline");
+        for(const e of sl){
+          const t = spikeTime(e.t);
+          const chip = el("span","spkchip"+(e.doc?"":" open"));
+          chip.appendChild(el("span","tm", t?t.label:"?"));
+          chip.appendChild(document.createTextNode(e.doc || "OPEN"));
+          si.appendChild(chip);
+        }
+        si.addEventListener("click", ()=> openSpikeDay(ds));
+        cell.appendChild(si);
+      }
+      const plus = el("button","offadd", offList.length ? "+" : "+ mark off");
+      plus.title = `Set who is off on ${fmtShort(ds)}`;
+      plus.addEventListener("click", ()=> openOffDay(ds));
+      o.appendChild(plus);
+      cell.appendChild(o);
+      for(const slot of slots){
+        cell.appendChild(slotRow(ds, slot, audit));
+      }
+    }
+    cal.appendChild(cell);
+    week.push(ds);
+    if(week.length===7){ appendSpikeLane(cal, week.slice()); week.length=0; }
+  }
+}
+
+// One compact band per week. On narrow screens the grid is a single column, so
+// the lane is hidden there and each day carries its own inline Spike 3 line.
+function appendSpikeLane(cal, week){
+  const any = week.some(ds=>spikeOn(ds).length);
+  for(const ds of week){
+    const d = fromIso(ds);
+    const inMonth = d.getMonth()===S.view.m;
+    const c = el("button","spklane"+(inMonth?"":" out")+(any?"":" bare"));
+    if(!inMonth){ c.disabled = true; cal.appendChild(c); continue; }
+    c.title = "Spike 3 for "+fmtShort(ds);
+    const list = spikeOn(ds);
+    if(!list.length){
+      c.appendChild(el("span","spkdash","·"));
+    } else {
+      for(const e of list){
+        const t = spikeTime(e.t);
+        const chip = el("span","spkchip"+(e.doc?"":" open"));
+        chip.appendChild(el("span","tm", t?t.label:"?"));
+        chip.appendChild(document.createTextNode(e.doc || "OPEN"));
+        c.appendChild(chip);
+      }
+    }
+    c.addEventListener("click", ()=> openSpikeDay(ds));
+    cal.appendChild(c);
+  }
+}
+
+function slotRow(ds, slot, audit){
+  const row = el("div","slot"+(SLOTS[slot].overnight?" noc":""));
+  row.appendChild(el("span","t", SLOTS[slot].label));
+  const id = at(ds,slot);
+  const flag = audit.cellFlags[ds+"|"+slot];
+  const b = el("button","chip"+(id?"":" open")+(flag?" "+flag.level:""));
+  if(id){
+    const doc = docById(id);
+    if(doc) tintEl(b, doc.color); else b.style.background="var(--surface-2)";
+    b.appendChild(el("span","nm", doc ? doc.initials : id));
+    if(flag){
+      const f = el("span","flag "+(flag.level==="hard"?"h":"s"), flag.level==="hard"?"●":"▲");
+      f.title = flag.list.map(x=>x.msg).join("\n");
+      b.appendChild(f);
+    }
+  } else {
+    b.appendChild(el("span","nm","OPEN"));
+    // while placing a doctor, grey out the slots they cannot legally take
+    if(armed){
+      const hard = checkPlacement(armed, ds, slot).filter(x=>x.level==="hard");
+      if(hard.length && !S.rules.allowOverride){
+        b.classList.add("noarm");
+        b.title = hard[0].msg;
+      }
+    }
+  }
+  b.addEventListener("click", ()=>{
+    if(armed && !id){ placeArmed(ds,slot); return; }
+    openPicker(ds,slot);
+  });
+  // the doctor keeps the full width; any NERDs sit on a line beneath
+  const col = el("div","cellcol");
+  col.appendChild(b);
+  if(id){
+    const line = el("div","nerdline");
+    for(const nid of nerdsOn(ds,slot)){
+      const n = nerdById(nid);
+      const c = el("button","nerdchip", n ? n.initials : nid);
+      c.title = (n && n.name ? n.name+" — " : "") + "NERD with "+id+", click to change";
+      c.addEventListener("click", ev=>{ ev.stopPropagation(); openNerdPicker(ds,slot); });
+      line.appendChild(c);
+    }
+    if(nerdAllowed(ds,slot).ok && activeNerds().length){
+      const add = el("button","nerdadd","+ NERD");
+      add.title = "Add a NERD to this shift";
+      add.addEventListener("click", ev=>{ ev.stopPropagation(); openNerdPicker(ds,slot); });
+      line.appendChild(add);
+    }
+    if(line.children.length) col.appendChild(line);
+  }
+  row.appendChild(col);
+  return row;
+}
+
+function renderRoster(){
+  const st = stats();
+  const t = $("#rtable");
+  t.innerHTML = `<thead><tr>
+      <th>Doctor</th><th>Shifts</th><th title="Saturday and Sunday">Wknd</th>
+      <th title="6p–6a">Ovn</th><th title="Days requested off this month">Req</th>
+    </tr></thead>`;
+  const tb = el("tbody");
+  for(const d of activeRoster()){
+    const s = st[d.id] || {shifts:0,wknd:0,ovn:0,pto:0};
+    const tr = el("tr"); if(armed===d.id) tr.className="picked";
+    const td1 = el("td");
+    const nm = el("div","rname");
+    const dot = el("span","dot"); tintEl(dot, d.color); nm.appendChild(dot);
+    nm.appendChild(el("span","ini", d.initials));
+    if(d.nightOK) nm.appendChild(el("span","noc-b","N"));
+    td1.appendChild(nm); tr.appendChild(td1);
+
+    const td2 = el("td");
+    const cm = el("div","cell-meter");
+    const pct = d.target? Math.min(100, Math.round(s.shifts/d.target*100)) : 0;
+    const overCls = s.shifts>d.target ? " over" : (s.shifts===d.target ? " done":"");
+    const m = el("span","m"+overCls); const i=el("i"); i.style.width=pct+"%"; m.appendChild(i);
+    const num = el("span","num "+(s.shifts>d.target?"over":s.shifts===d.target?"exact":"under"),
+                   `${s.shifts}/${d.target}`);
+    cm.appendChild(m); cm.appendChild(num); td2.appendChild(cm); tr.appendChild(td2);
+
+    tr.appendChild(el("td","", String(s.wknd)));
+    const tdo = el("td", d.nightOK?"":"mut", d.nightOK? String(s.ovn) : "—");
+    tr.appendChild(tdo);
+    tr.appendChild(el("td","mut", String(s.pto)));
+
+    tr.addEventListener("click", ()=> toggleArm(d.id));
+    tb.appendChild(tr);
+  }
+  t.appendChild(tb);
+}
+
+function renderIssues(a){
+  const host = $("#issues"); host.innerHTML="";
+  const bits=[];
+  if(a.hard) bits.push(`${a.hard} hard`);
+  if(a.soft) bits.push(`${a.soft} soft`);
+  if(a.unmet) bits.push(`${a.unmet} unmet`);
+  $("#issueCount").textContent = bits.join(" · ");
+
+  if(a.quotas.length){
+    const capy = quotaCapacity(S.view.y,S.view.m);
+    const tight = {}; capy.forEach(c=>{ if(!c.fits) tight[c.rule.id]=c; });
+    host.appendChild(el("div","pgroup","Monthly minimums"));
+    if(Object.keys(tight).length){
+      const n = el("div","hint capnote");
+      const parts = Object.values(tight).map(c=>
+        `only ${c.slots} ${quotaUnit(c.rule)} exist but ${c.n} × ${c.rule.count} needs ${c.need}, so at most ${c.maxDocs} can reach it`);
+      n.textContent = "This month cannot satisfy every minimum: " + parts.join("; ") +
+        ". Auto-fill spreads what exists so nobody is left with none.";
+      host.appendChild(n);
+    }
+    for(const q of a.quotas){
+      const b = el("button","issue q");
+      b.appendChild(el("span","bar"));
+      const wr = el("div");
+      const impossible = q.code==="min" && tight[q.rule];
+      wr.appendChild(el("div","d", impossible ? "not reachable this month"
+                                              : (q.code==="max" ? "over by "+q.short : "short by "+q.short)));
+      const mm = el("div","m"); mm.innerHTML = q.msg.replace(/^(\S+)/, "<b>$1</b>");
+      wr.appendChild(mm);
+      b.appendChild(wr);
+      b.addEventListener("click", openRoster);
+      host.appendChild(b);
+    }
+  }
+
+  if(!a.issues.length){
+    if(!a.quotas.length){
+      const e = el("div","empty"+(a.open?"":" ok"),
+        a.open ? "No violations. "+a.open+" slot"+(a.open>1?"s":"")+" still OPEN."
+               : "Every slot covered, no rules broken. All cats herded.");
+      host.appendChild(e);
+    }
+    return;
+  }
+  if(a.quotas.length) host.appendChild(el("div","pgroup","Placements"));
+  for(const i of a.issues.slice(0,140)){
+    const b = el("button","issue "+(i.level==="hard"?"h":"s"));
+    b.appendChild(el("span","bar"));
+    const wrap = el("div");
+    wrap.appendChild(el("div","d", `${fmtShort(i.date)} · ${SLOTS[i.slot].label}`));
+    const m = el("div","m"); m.innerHTML = i.msg.replace(/^(\w+)/, "<b>$1</b>");
+    wrap.appendChild(m);
+    b.appendChild(wrap);
+    b.addEventListener("click", ()=> openPicker(i.date, i.slot));
+    host.appendChild(b);
+  }
+}
+
+/* ============================================================
+   6. PLACEMENT
+   ============================================================ */
+
+function toggleArm(id){
+  armed = (armed===id) ? null : id;
+  document.body.classList.toggle("armed", !!armed);
+  if(armed) $("#armName").textContent = armed;
+  render();
+}
+function placeArmed(ds,slot){
+  const v = checkPlacement(armed, ds, slot);
+  const hard = v.filter(x=>x.level==="hard");
+  if(hard.length && !S.rules.allowOverride){
+    flashBlock(hard[0].msg); return;
+  }
+  assign(ds,slot,armed);
+  render();
+}
+let flashT=null;
+function flashBlock(msg){
+  let n = $("#flash");
+  if(!n){
+    n = el("div"); n.id="flash";
+    n.style.cssText="position:fixed;left:50%;transform:translateX(-50%);bottom:64px;z-index:120;"+
+      "background:var(--crit);color:#fff;padding:9px 14px;border-radius:9px;font-size:13px;"+
+      "box-shadow:0 8px 24px rgba(0,0,0,.2);max-width:88vw;text-align:center";
+    document.body.appendChild(n);
+  }
+  n.textContent = msg; n.style.display="block";
+  clearTimeout(flashT); flashT=setTimeout(()=>{n.style.display="none";},2400);
+}
+
+/* ============================================================
+   7. MODALS
+   ============================================================ */
+
+function showModal(node){
+  const host=$("#modalHost"); host.innerHTML=""; host.appendChild(node);
+  $("#veil").classList.add("on");
+}
+function closeModal(){ $("#veil").classList.remove("on"); $("#modalHost").innerHTML=""; }
+$("#veil").addEventListener("click", e=>{ if(e.target.id==="veil") closeModal(); });
+document.addEventListener("keydown", e=>{
+  if(e.key==="Escape"){ if($("#veil").classList.contains("on")) closeModal(); else if(armed) toggleArm(armed); }
+});
+function modalShell(title, sub, wide){
+  const m = el("div","modal"+(wide?" wide":""));
+  const h = el("div","modal-h");
+  const box = el("div");
+  box.appendChild(el("h3","",title));
+  if(sub) box.appendChild(el("div","sub",sub));
+  h.appendChild(box);
+  const x = el("button","x","×"); x.addEventListener("click", closeModal); h.appendChild(x);
+  m.appendChild(h);
+  const b = el("div","modal-b"); m.appendChild(b);
+  const f = el("div","modal-f"); m.appendChild(f);
+  return {m, body:b, foot:f};
+}
+
+/* ---- assignment picker ---- */
+function openPicker(ds, slot){
+  const cur = at(ds,slot);
+  const {m, body, foot} = modalShell(
+    SLOTS[slot].label,
+    `${DOW[dowOf(ds)]}, ${fromIso(ds).toLocaleDateString(undefined,{month:"long",day:"numeric",year:"numeric"})}`
+  );
+  const st = stats();
+
+  const rows = activeRoster().map(d=>{
+    const v = checkPlacement(d.id, ds, slot);
+    const hard = v.filter(x=>x.level==="hard");
+    const soft = v.filter(x=>x.level==="soft");
+    const s = st[d.id]||{shifts:0};
+    return {d, v, hard, soft, need: d.target - s.shifts, cur:s.shifts};
+  });
+  rows.sort((a,b)=>{
+    const rank = r => r.hard.length ? 2 : (r.soft.length ? 1 : 0);
+    if(rank(a)!==rank(b)) return rank(a)-rank(b);
+    if(b.need!==a.need) return b.need-a.need;
+    const pa = prefRank(a.d, slot), pb = prefRank(b.d, slot);
+    if(pb!==pa) return pb-pa;
+    return a.d.initials.localeCompare(b.d.initials);
+  });
+
+  const groups = [
+    ["Currently assigned", r=>r.d.id===cur],
+    ["Available", r=>r.d.id!==cur && !r.hard.length && !r.soft.length],
+    ["Available with a caution", r=>r.d.id!==cur && !r.hard.length && r.soft.length],
+    ["Blocked", r=>r.d.id!==cur && r.hard.length],
+  ];
+  for(const [gname, test] of groups){
+    const set = rows.filter(test);
+    if(!set.length) continue;
+    body.appendChild(el("div","pgroup", gname));
+    for(const r of set){
+      const isCur = r.d.id===cur;
+      const blocked = !isCur && r.hard.length && !S.rules.allowOverride;
+      const btn = el("button","pick"+(blocked?" blocked":""));
+      if(isCur) btn.style.cssText="background:var(--brand-soft);border-color:var(--brand-mid)";
+      const who = el("div","who");
+      const ini = el("span","ini", r.d.initials); tintEl(ini, r.d.color);
+      who.appendChild(ini);
+      if(r.d.name) who.appendChild(el("span","full", r.d.name));
+      btn.appendChild(who);
+      const right = el("div","right");
+      const pi = (r.d.prefs||[]).indexOf(slot);
+      if(pi>=0 && pi<3 && !r.hard.length)
+        right.appendChild(el("span","pref", pi===0 ? "top choice" : `#${pi+1} choice`));
+      right.appendChild(el("span","load", `${r.cur}/${r.d.target}`));
+      if(r.hard.length) right.appendChild(el("span","why h", r.hard[0].msg));
+      else if(r.soft.length) right.appendChild(el("span","why s", r.soft[0].msg));
+      else if(isCur) right.appendChild(el("span","why g", "on this shift"));
+      else if(r.need>0) right.appendChild(el("span","why g", `needs ${r.need} more`));
+      btn.appendChild(right);
+      if(isCur){
+        btn.addEventListener("click", ()=>{ assign(ds,slot,null); closeModal(); render(); });
+      } else if(!blocked){
+        btn.addEventListener("click", ()=>{ assign(ds,slot,r.d.id); closeModal(); render(); });
+      }
+      body.appendChild(btn);
+    }
+  }
+
+  if(cur && activeNerds().length){
+    const g = nerdAllowed(ds,slot);
+    const on = nerdsOn(ds,slot);
+    const nb = el("button","btn");
+    nb.style.cssText = "border-color:var(--nerd-mid);color:var(--nerd)";
+    nb.textContent = !g.ok ? "NERDs not allowed here"
+                   : on.length ? `NERDs · ${on.map(x=>(nerdById(x)||{}).initials||x).join(", ")}`
+                   : "+ Add a NERD";
+    if(g.ok) nb.addEventListener("click", ()=>{ closeModal(); openNerdPicker(ds,slot); });
+    else { nb.disabled = true; nb.title = g.why; nb.style.opacity=".55"; }
+    foot.appendChild(nb);
+  }
+  if(cur){
+    const clr = el("button","btn danger","Clear this slot");
+    clr.addEventListener("click", ()=>{ assign(ds,slot,null); closeModal(); render(); });
+    foot.appendChild(clr);
+  }
+  foot.appendChild(el("span","spacer"));
+  const hintTxt = S.rules.allowOverride
+      ? "Override is on — blocked doctors can still be placed."
+      : "Blocked doctors break a hard rule. Turn on override in Rules to place anyway.";
+  foot.appendChild(el("span","hint", hintTxt));
+  showModal(m);
+}
+
+/* ---- roster ---- */
+function openRoster(){
+  const {m, body, foot} = modalShell("Doctors", "Targets, overnight eligibility, restrictions and requested days off", true);
+  const list = el("div");
+  let draw = ()=>{
+    list.innerHTML="";
+    S.roster.forEach((d,idx)=>{
+      const card = el("div","rowcard"+(d.active?"":" off"));
+      const cols = el("div","doccols");
+      const leftCol = el("div");
+      const g = el("div","grid5");
+
+      const c1=el("div"); c1.appendChild(labeled("Initials", inputFor(d,"initials","text")));
+      const c2=el("div"); c2.appendChild(labeled("Name", inputFor(d,"name","text")));
+      const c3=el("div"); c3.appendChild(labeled("Target", inputFor(d,"target","number")));
+      const c4=el("div");
+      const chks=el("div"); chks.style.cssText="display:flex;flex-direction:column;gap:3px";
+      chks.appendChild(chk("Overnights", d.nightOK, v=>{ d.nightOK=v; save(); render(); }));
+      chks.appendChild(chk("Active", d.active, v=>{ d.active=v; save(); draw(); render(); }));
+      c4.appendChild(chks);
+      const c5=el("div");
+      const rm=el("button","btn danger","×"); rm.title="Remove";
+      rm.addEventListener("click", ()=>{
+        if(confirm(`Remove ${d.initials}? Existing assignments stay but will show as unknown.`)){
+          S.roster.splice(idx,1); save(); draw(); render();
+        }
+      });
+      c5.appendChild(rm);
+      g.append(c1,c2,c3,c4,c5);
+      leftCol.appendChild(g);
+
+      const rl = el("div");
+      const dc = el("div","daychks");
+      DOW3.forEach((nm,w)=>{
+        const state = restrictState(d,w); // 0 none, 1 all, 2 late
+        const b = el("button","daychk"+(state?" on":""), nm + (state===2?" late":""));
+        b.addEventListener("click", ()=>{ cycleRestrict(d,w); save(); draw(); render(); });
+        dc.appendChild(b);
+      });
+      rl.appendChild(dc);
+      const nt = el("input"); nt.type="text"; nt.value=d.notes||""; nt.placeholder="Notes";
+      nt.style.marginTop="7px";
+      nt.addEventListener("input", ()=>{ d.notes=nt.value; save(); });
+      rl.appendChild(nt);
+      rl.appendChild(prefBox(d, ()=>draw()));
+      leftCol.appendChild(rl);
+
+      cols.appendChild(leftCol);
+      cols.appendChild(miniCal(d, ()=>draw()));
+      card.appendChild(cols);
+      list.appendChild(card);
+    });
+  };
+  const labeled=(t,node)=>{const w=el("div");w.appendChild(el("label","fl",t));w.appendChild(node);return w;};
+  function inputFor(d,key,type){
+    const i=el("input"); i.type=type; i.value=d[key]==null?"":d[key];
+    i.addEventListener("input", ()=>{
+      d[key] = type==="number" ? (parseInt(i.value,10)||0) : i.value;
+      if(key==="initials") d.id = i.value;
+      save(); render();
+    });
+    return i;
+  }
+  function chk(label, val, on){
+    const w=el("label","chk"); const i=el("input"); i.type="checkbox"; i.checked=!!val;
+    i.addEventListener("change", ()=>on(i.checked));
+    w.appendChild(i); w.appendChild(document.createTextNode(label)); return w;
+  }
+  // month nav — the request calendars follow whichever month you are building
+  const bar = el("div","reqbar");
+  const nav = el("div","mn");
+  const bPrev = el("button","","‹"), lb = el("div","lb"), bNext = el("button","","›");
+  nav.append(bPrev, lb, bNext);
+  bar.appendChild(nav);
+  const barNote = el("span","hint");
+  bar.appendChild(barNote);
+
+  const stamp = ()=>{
+    lb.textContent = new Date(S.view.y,S.view.m,1)
+        .toLocaleDateString(undefined,{month:"long",year:"numeric"});
+    const days = monthDays(S.view.y,S.view.m);
+    let total=0, clash=0;
+    for(const d of activeRoster()){
+      const off=(S.pto[d.id]||[]).filter(x=>days.includes(x));
+      total+=off.length;
+      clash+=off.filter(x=>shiftsOn(x,d.id).length).length;
+    }
+    barNote.textContent = (total ? `${total} day${total>1?"s":""} requested off` : "No requests off yet")
+      + (clash ? ` · ${clash} still has a shift placed` : "");
+  };
+  const step = n => ()=>{ let{y,m}=S.view; m+=n; if(m<0){m=11;y--;} if(m>11){m=0;y++;} S.view={y,m}; render(); draw(); };
+  bPrev.addEventListener("click", step(-1));
+  bNext.addEventListener("click", step(1));
+
+  const _draw = draw;
+  draw = ()=>{ _draw(); stamp(); };
+  draw();
+
+  const lede = el("div","hint");
+  lede.style.marginBottom="10px";
+  lede.textContent = "Target is preferred shifts per month. Blocked weekdays warn but never block — click once for the whole day, twice for late shifts only. Requested days off are a hard block: click a date to toggle it, shift-click to run a range.";
+  body.appendChild(lede);
+  body.appendChild(bar);
+  body.appendChild(list);
+
+  // ---- NERDs ----
+  body.appendChild(el("div","pgroup","NERDs"));
+  const nlede = el("div","hint"); nlede.style.marginBottom="8px";
+  nlede.textContent = "New Emergency Room Doctors shadow a doctor on a shift. No targets, no preferences, no requests off — never on Wednesdays, and on Tuesdays only 6a–6p or 8a–8p.";
+  body.appendChild(nlede);
+  const nhost = el("div"); body.appendChild(nhost);
+
+  function drawNerds(){
+    nhost.innerHTML="";
+    const counts = nerdCounts(S.view.y,S.view.m);
+    if(!(S.nerds||[]).length) nhost.appendChild(el("div","empty","No NERDs yet."));
+    (S.nerds||[]).forEach((n,i)=>{
+      const row = el("div","nerdrow"+(n.active===false?" off":""));
+      const dot = el("span","ndot"); row.appendChild(dot);
+      const ini = el("input"); ini.type="text"; ini.value=n.initials||""; ini.placeholder="JA";
+      ini.style.cssText="width:64px;flex:none";
+      ini.addEventListener("input", ()=>{ n.initials=ini.value; n.id=ini.value; save(); render(); });
+      row.appendChild(ini);
+      const nm = el("input"); nm.type="text"; nm.value=n.name||""; nm.placeholder="Name";
+      nm.addEventListener("input", ()=>{ n.name=nm.value; save(); });
+      row.appendChild(nm);
+      row.appendChild(el("span","ncnt", `${counts[n.id]||0} shifts`));
+      const rm = el("button","btn danger","×"); rm.title="Remove";
+      rm.addEventListener("click", ()=>{
+        const total = counts[n.id]||0;
+        if(!confirm(`Remove ${n.initials||"this NERD"}?` + (total?` They are on ${total} shift${total>1?"s":""} this month, which will be cleared.`:""))) return;
+        for(const ds in (S.nerdAssign||{}))
+          for(const slot in S.nerdAssign[ds]) setNerd(ds,slot,n.id,false);
+        S.nerds.splice(i,1); save(); drawNerds(); render();
+      });
+      row.appendChild(rm);
+      nhost.appendChild(row);
+    });
+    const an = el("button","btn","+ Add NERD");
+    an.addEventListener("click", ()=>{
+      S.nerds = S.nerds||[];
+      S.nerds.push({id:"NEW", initials:"NEW", name:"", active:true});
+      save(); drawNerds(); render();
+    });
+    nhost.appendChild(an);
+  }
+  drawNerds();
+
+  const add = el("button","btn","+ Add doctor");
+  add.addEventListener("click", ()=>{
+    const n = {id:"NEW", initials:"NEW", name:"", target:10, nightOK:false,
+               restrictions:[], notes:"", active:true, color:TINTS[S.roster.length%TINTS.length]};
+    S.roster.push(n); save(); draw(); render();
+  });
+  foot.appendChild(add);
+  const lg = el("div","legend");
+  lg.style.marginLeft="12px";
+  const mk=(cls,txt)=>{const s=el("span");s.append(el("i",cls),document.createTextNode(txt));return s;};
+  lg.append(mk("off","requested off"), mk("sc","has a shift"), mk("cf sc","clash"));
+  foot.appendChild(lg);
+  foot.appendChild(el("span","spacer"));
+  const done=el("button","btn primary","Done"); done.addEventListener("click", ()=>{closeModal();render();});
+  foot.appendChild(done);
+  showModal(m);
+}
+/* Ranked shift preferences — soft weighting the solver reads, never a rule.
+   Collapsed to a one-line summary until you open it, so the roster stays scannable. */
+const prefOpen = {};
+function prefBox(d, redraw){
+  const wrap = el("div","prefbox");
+  if(!Array.isArray(d.prefs) || !d.prefs.length) d.prefs = SLOT_ORDER.slice();
+  // keep the list honest if slot types ever change
+  d.prefs = d.prefs.filter(k=>SLOTS[k]).concat(SLOT_ORDER.filter(k=>!d.prefs.includes(k)));
+
+  // how many shifts in a row this doctor likes
+  const bp = el("div","blockrow");
+  bp.appendChild(el("span","lbl","Shifts in a row"));
+  [[1,"1"],[2,"2"],[3,"3"],[4,"4"],[0,"any"]].forEach(([v,t])=>{
+    const b = el("button","bp"+((d.blockPref|0)===v?" on":""), t);
+    b.title = v ? `${d.initials} prefers working ${v} day${v>1?"s":""} in a row`
+                : `${d.initials} has no preference either way`;
+    b.addEventListener("click", ()=>{ d.blockPref = v; save(); redraw(); render(); });
+    bp.appendChild(b);
+  });
+  wrap.appendChild(bp);
+
+  const sum = el("button","prefsum");
+  sum.appendChild(document.createTextNode("Prefers "));
+  const b = el("b","", d.prefs.slice(0,3).map(k=>SLOTS[k].label).join(", "));
+  sum.appendChild(b);
+  sum.appendChild(el("span","ed", prefOpen[d.id] ? "close" : "reorder"));
+  sum.addEventListener("click", ()=>{ prefOpen[d.id] = !prefOpen[d.id]; redraw(); });
+  wrap.appendChild(sum);
+
+  if(prefOpen[d.id]){
+    const list = el("div","preflist");
+    d.prefs.forEach((k,i)=>{
+      const row = el("div","prefrow"+(i<3?" top":""));
+      row.appendChild(el("span","r", String(i+1)));
+      row.appendChild(el("span","l", SLOTS[k].label));
+      if(SLOTS[k].overnight && !d.nightOK)
+        row.appendChild(el("span","hint","day-only"));
+      const up = el("button","mv","▲"), dn = el("button","mv","▼");
+      if(i===0) up.setAttribute("disabled","");
+      if(i===d.prefs.length-1) dn.setAttribute("disabled","");
+      up.addEventListener("click", ()=>{ swapPref(d,i,i-1); save(); redraw(); });
+      dn.addEventListener("click", ()=>{ swapPref(d,i,i+1); save(); redraw(); });
+      row.append(up,dn);
+      list.appendChild(row);
+    });
+    wrap.appendChild(list);
+    const rs = el("button","btn"); rs.textContent="Reset to their usual mix";
+    rs.style.cssText="margin-top:6px;font-size:11.5px;padding:3px 8px";
+    rs.title="Back to the ranking derived from what they actually worked";
+    rs.addEventListener("click", ()=>{
+      d.prefs = (SEED_PREFS[d.initials]||SLOT_ORDER).slice(); save(); redraw();
+    });
+    wrap.appendChild(rs);
+  }
+  return wrap;
+}
+function swapPref(d,i,j){
+  if(j<0 || j>=d.prefs.length) return;
+  const t=d.prefs[i]; d.prefs[i]=d.prefs[j]; d.prefs[j]=t;
+}
+
+function restrictState(d,w){
+  const r = (d.restrictions||[]).find(x=>x.days.includes(w));
+  if(!r) return 0;
+  return r.slots==="late" ? 2 : 1;
+}
+function cycleRestrict(d,w){
+  d.restrictions = d.restrictions||[];
+  const st = restrictState(d,w);
+  d.restrictions = d.restrictions.filter(x=>!x.days.includes(w) || (x.days=x.days.filter(y=>y!==w)).length);
+  if(st===0) d.restrictions.push({days:[w], slots:"all"});
+  else if(st===1) d.restrictions.push({days:[w], slots:"late"});
+}
+
+/* ---- who is off on one day, opened from the calendar's OFF strip ---- */
+function openOffDay(ds){
+  const {m, body, foot} = modalShell(
+    "Off on " + fromIso(ds).toLocaleDateString(undefined,{weekday:"long", month:"long", day:"numeric"}),
+    "Tap a doctor to toggle their request off for this day"
+  );
+  const note = el("div","hint"); note.style.marginBottom="9px";
+  body.appendChild(note);
+  const list = el("div");
+  body.appendChild(list);
+
+  function draw(){
+    list.innerHTML="";
+    const st = stats();
+    const rows = activeRoster().map(d=>({
+      d, off:isPTO(d.id,ds), mine:shiftsOn(ds,d.id), load:(st[d.id]||{shifts:0}).shifts
+    }));
+    rows.sort((a,b)=> (b.off-a.off) || a.d.initials.localeCompare(b.d.initials));
+
+    let offN=0, clashN=0;
+    for(const r of rows){
+      if(r.off) offN++;
+      if(r.off && r.mine.length) clashN++;
+      const btn = el("button","pick");
+      if(r.off) btn.style.cssText="background:#fdf6e6;border-color:#e0bd68";
+      const who = el("div","who");
+      const ini = el("span","ini", r.d.initials); tintEl(ini, r.d.color);
+      who.appendChild(ini);
+      if(r.d.name) who.appendChild(el("span","full", r.d.name));
+      btn.appendChild(who);
+
+      const right = el("div","right");
+      right.appendChild(el("span","load", `${r.load}/${r.d.target}`));
+      if(r.off && r.mine.length)
+        right.appendChild(el("span","why h", `off but still on ${SLOTS[r.mine[0]].label}`));
+      else if(r.off)
+        right.appendChild(el("span","why s","requested off"));
+      else if(r.mine.length)
+        right.appendChild(el("span","why g", `working ${SLOTS[r.mine[0]].label}`));
+      btn.appendChild(right);
+
+      btn.addEventListener("click", ()=>{
+        setReq(r.d.id, ds, !r.off);
+        save(); draw(); render();
+      });
+      list.appendChild(btn);
+    }
+    note.textContent = (offN ? `${offN} off this day` : "Nobody is off this day")
+      + (clashN ? ` · ${clashN} still has a shift placed` : "");
+  }
+  draw();
+  foot.appendChild(el("span","hint","Requests off are a hard block — a doctor marked off cannot be placed. Existing shifts are not removed; they flag so you can see what needs moving."));
+  showModal(m);
+}
+
+/* ---- requests off: a mini calendar that belongs to one doctor ---- */
+let lastReqClick = {};   // doctorId -> last date clicked, for shift-click ranges
+
+function setReq(id, ds, on){
+  S.pto[id] = S.pto[id] || [];
+  const i = S.pto[id].indexOf(ds);
+  if(on && i<0) S.pto[id].push(ds);
+  if(!on && i>=0) S.pto[id].splice(i,1);
+  S.pto[id].sort();
+}
+
+// One doctor's month. Click a day to block it; shift-click to run a range.
+function miniCal(d, redraw){
+  const days = monthDays(S.view.y, S.view.m);
+  const off = new Set((S.pto[d.id]||[]).filter(x=>days.includes(x)));
+
+  const wrap = el("div","reqblock");
+  const h = el("h5");
+  h.appendChild(document.createTextNode("Requested off"));
+  const n = el("span","n"+(off.size?" has":""), off.size ? `${off.size} day${off.size>1?"s":""}` : "none");
+  h.appendChild(n);
+  if(off.size){
+    const clr = el("button","clr","×");
+    clr.title = `Clear ${d.initials}'s requests for this month`;
+    clr.addEventListener("click", ()=>{
+      S.pto[d.id] = (S.pto[d.id]||[]).filter(x=>!days.includes(x));
+      save(); redraw(); render();
+    });
+    h.appendChild(clr);
+  }
+  wrap.appendChild(h);
+
+  const mini = el("div","mini");
+  ["S","M","T","W","T","F","S"].forEach(x=> mini.appendChild(el("div","mh", x)));
+  for(let i=0;i<fromIso(days[0]).getDay();i++){
+    const b=el("button","blank"); b.tabIndex=-1; mini.appendChild(b);
+  }
+  for(const ds of days){
+    const w = dowOf(ds);
+    const isOff = off.has(ds);
+    const mine = shiftsOn(ds, d.id);
+    const b = el("button",
+      [[0,6].includes(w)?"we":"", isOff?"off":"", mine.length?"sched":""].filter(Boolean).join(" "),
+      String(fromIso(ds).getDate()));
+    b.title = fmtShort(ds)
+      + (isOff ? " — requested off" : "")
+      + (mine.length ? ` — scheduled ${SLOTS[mine[0]].label}` : "");
+    b.addEventListener("click", ev=>{
+      const anchor = lastReqClick[d.id];
+      if(ev.shiftKey && anchor){
+        const [a,z] = anchor<=ds ? [anchor,ds] : [ds,anchor];
+        const turnOn = !isOff;
+        let c=a, guard=0;
+        while(c<=z && guard++<400){ setReq(d.id,c,turnOn); c=addDays(c,1); }
+      } else {
+        setReq(d.id, ds, !isOff);
+      }
+      lastReqClick[d.id] = ds;
+      save(); redraw(); render();
+    });
+    mini.appendChild(b);
+  }
+  wrap.appendChild(mini);
+  return wrap;
+}
+
+
+/* ---- auto-fill ---- */
+function openAutofill(){
+  const label = new Date(S.view.y,S.view.m,1).toLocaleDateString(undefined,{month:"long",year:"numeric"});
+  const {m, body, foot} = modalShell("Auto-fill " + label,
+    "Fills every slot it legally can, weighted by need and preference");
+
+  let mode = "open", overshoot = true;
+  const a = monthAudit();
+
+  const opts = el("div");
+  const radio = (val,title,desc)=>{
+    const b = el("button","pick");
+    const mark = el("span","ini", mode===val ? "●" : "○");
+    mark.style.cssText="background:transparent;border-color:transparent;font-size:15px;padding:0 4px";
+    const who = el("div","who"); who.appendChild(mark);
+    const txt = el("div");
+    txt.appendChild(el("div","", title));
+    const d2 = el("div","hint", desc); d2.style.marginTop="1px";
+    txt.appendChild(d2);
+    who.appendChild(txt);
+    b.appendChild(who);
+    b.addEventListener("click", ()=>{ mode=val; drawOpts(); });
+    return b;
+  };
+  function drawOpts(){
+    opts.innerHTML="";
+    opts.appendChild(radio("open","Fill the open slots",
+      `Keeps everything already placed. ${a.open} slot${a.open===1?"":"s"} open right now.`));
+    opts.appendChild(radio("rebuild","Clear and rebuild the month",
+      `Throws away all ${a.filled} current placements and starts fresh. Requests off are kept.`));
+    const w = el("label","chk"); w.style.cssText="margin-top:9px;padding:4px 0";
+    const i = el("input"); i.type="checkbox"; i.checked=overshoot;
+    i.addEventListener("change", ()=>{ overshoot=i.checked; });
+    w.appendChild(i);
+    w.appendChild(document.createTextNode("Let doctors go past their preferred total rather than leave a slot open"));
+    opts.appendChild(w);
+  }
+  drawOpts();
+  body.appendChild(opts);
+
+  const out = el("div"); out.style.marginTop="10px"; body.appendChild(out);
+
+  const run = el("button","btn primary","Run");
+  run.addEventListener("click", ()=>{
+    run.disabled=true; run.textContent="Working…";
+    setTimeout(()=>{
+      const r = autofill({mode, allowOvershoot:overshoot});
+      render();
+      out.innerHTML="";
+      out.appendChild(el("div","pgroup","Result"));
+      const line = (t)=>{const d=el("div");d.style.cssText="font-size:12.5px;color:var(--ink-2);padding:2px 0";d.textContent="• "+t;return d;};
+      out.appendChild(line(`Placed ${r.placed} shift${r.placed===1?"":"s"}${r.cleared?`, after clearing ${r.cleared}`:""}.`));
+      out.appendChild(line(`${r.filled} of ${r.totalSlots} slots covered${r.open?` — ${r.open} still open`:", nothing left open"}.`));
+      out.appendChild(line(`${r.onTarget} of ${r.rosterN} doctors landed exactly on their preferred total.`));
+      const post = monthAudit();
+      out.appendChild(line(post.hard
+        ? `${post.hard} hard violation${post.hard===1?"":"s"} remain from shifts placed by hand.`
+        : `No hard rules broken.`));
+      if(r.unfilled.length){
+        out.appendChild(el("div","pgroup","Could not be filled"));
+        for(const u of r.unfilled.slice(0,12)){
+          const b = el("button","issue h"); b.appendChild(el("span","bar"));
+          const wr = el("div");
+          wr.appendChild(el("div","d", `${fmtShort(u.ds)} · ${SLOTS[u.slot].label}`));
+          wr.appendChild(el("div","m","every doctor was blocked by a hard rule"));
+          b.appendChild(wr);
+          b.addEventListener("click", ()=>{ closeModal(); openPicker(u.ds,u.slot); });
+          out.appendChild(b);
+        }
+      }
+      run.disabled=false; run.textContent="Run again";
+    }, 30);
+  });
+  foot.appendChild(el("span","hint","Runs on this device. Hard rules are never broken — a slot is left open instead."));
+  foot.appendChild(el("span","spacer"));
+  foot.appendChild(run);
+  showModal(m);
+}
+
+/* ---- Spike 3 for one day ---- */
+function spikeCheck(id, ds, idx){
+  const doc = docById(id); const out=[];
+  if(!doc) return out;
+  if(S.rules.onPto!==false && isPTO(id,ds))
+    out.push({code:"pto", msg:`${id} requested ${fmtShort(ds)} off`});
+  const other = shiftsOn(ds,id).filter(k=>k!=="spk");
+  const otherSpike = spikeOn(ds).some((e,i)=>i!==idx && e.doc===id);
+  if(S.rules.onOneADay!==false && (other.length || otherSpike))
+    out.push({code:"double", msg:other.length
+      ? `${id} already has ${SLOTS[other[0]].label} that day`
+      : `${id} already has a Spike 3 that day`});
+  const rec = S.rules.onRecovery!==false;
+  const off = rec ? (S.rules.nightOffDays|0) : 0;
+  const early = rec ? (S.rules.nightEarlyDays|0) : 0;
+  if(rec){
+    let flagged=false;
+    for(let k=1;k<=off;k++)
+      if(at(addDays(ds,-k),"noc")===id){
+        out.push({code:"nightrec", msg:`${id} worked the overnight ${fmtShort(addDays(ds,-k))} — the ${off} days after are fully off`});
+        flagged=true; break;
+      }
+    if(!flagged){
+      const entry = spikeOn(ds)[idx];
+      const startH = entry ? (spikeTime(entry.t)||{start:14}).start : 14;
+      if(startH < 12) for(let k=off+1;k<=early;k++)
+        if(at(addDays(ds,-k),"noc")===id){
+          out.push({code:"nightearly", msg:`${id} came off an overnight ${fmtShort(addDays(ds,-k))} — nothing starting before noon yet`});
+          break;
+        }
+    }
+  }
+  return out;
+}
+
+function openSpikeDay(ds){
+  const d = fromIso(ds);
+  const {m, body, foot} = modalShell("Spike 3 · " +
+    d.toLocaleDateString(undefined,{weekday:"long", month:"long", day:"numeric"}),
+    "Triage cover. Does not count toward the day's coverage.");
+  const host = el("div"); body.appendChild(host);
+
+  function draw(){
+    host.innerHTML="";
+    const list = spikeOn(ds);
+    if(!list.length) host.appendChild(el("div","empty","No Spike 3 on this day yet."));
+    list.forEach((e,i)=>{
+      const card = el("div","spkcard");
+      const row = el("div","spkrow");
+      const tsel = el("select"); tsel.style.cssText="width:auto;flex:none";
+      spikeTimes().forEach(t=>{
+        const o=el("option","",t.label); o.value=t.id; if(t.id===e.t) o.selected=true; tsel.appendChild(o);
+      });
+      tsel.addEventListener("change", ()=>{ setSpikeTime(ds,i,tsel.value); save(); draw(); render(); });
+      row.appendChild(tsel);
+      const dsel = el("select"); dsel.style.cssText="flex:1";
+      const none=el("option","","— OPEN —"); none.value=""; if(!e.doc) none.selected=true; dsel.appendChild(none);
+      for(const doc of activeRoster()){
+        const bad = spikeCheck(doc.id, ds, i);
+        const o=el("option","", doc.initials + (doc.name?` — ${doc.name}`:"") + (bad.length?`  ·  ${bad[0].msg}`:""));
+        o.value=doc.id; if(e.doc===doc.id) o.selected=true;
+        if(bad.length && S.rules.allowOverride!==true) o.disabled=true;
+        dsel.appendChild(o);
+      }
+      dsel.addEventListener("change", ()=>{ setSpikeDoc(ds,i,dsel.value||null); save(); draw(); render(); });
+      row.appendChild(dsel);
+      const rm=el("button","btn danger","×"); rm.title="Remove this Spike 3";
+      rm.addEventListener("click", ()=>{ removeSpike(ds,i); save(); draw(); render(); });
+      row.appendChild(rm);
+      card.appendChild(row);
+      if(e.doc){
+        const bad = spikeCheck(e.doc, ds, i);
+        if(bad.length){
+          const w=el("div","hint"); w.style.color="var(--crit)"; w.textContent=bad[0].msg;
+          card.appendChild(w);
+        }
+      } else {
+        card.appendChild(el("div","hint","Nobody assigned — this seat is open."));
+      }
+      host.appendChild(card);
+    });
+    const add = el("button","btn","+ Add a Spike 3");
+    add.addEventListener("click", ()=>{ addSpike(ds, spikeTimes()[0].id, null); save(); draw(); render(); });
+    host.appendChild(add);
+  }
+  draw();
+  const times = el("button","btn","Edit the time list");
+  times.addEventListener("click", ()=>{ closeModal(); openRules(); });
+  foot.appendChild(times);
+  foot.appendChild(el("span","spacer"));
+  const done=el("button","btn primary","Done"); done.addEventListener("click", ()=>{closeModal();render();});
+  foot.appendChild(done);
+  showModal(m);
+}
+
+/* ---- NERDs on one shift ---- */
+function openNerdPicker(ds, slot){
+  const holder = at(ds,slot);
+  const {m, body, foot} = modalShell("NERDs on "+SLOTS[slot].label,
+    `${fromIso(ds).toLocaleDateString(undefined,{weekday:"long", month:"long", day:"numeric"})}${holder?" · with "+holder:""}`);
+
+  const gate = nerdAllowed(ds,slot);
+  const counts = nerdCounts(S.view.y, S.view.m);
+  const note = el("div","hint"); note.style.marginBottom="9px"; body.appendChild(note);
+  const list = el("div"); body.appendChild(list);
+
+  function draw(){
+    list.innerHTML="";
+    const on = nerdsOn(ds,slot);
+    if(!gate.ok){
+      note.textContent = gate.why + ".";
+      note.style.color = "var(--nerd)";
+      list.appendChild(el("div","empty","Nothing to assign here."));
+      return;
+    }
+    if(!activeNerds().length){
+      note.textContent = "No NERDs on the list yet.";
+      const b = el("button","btn","Add NERDs under Doctors");
+      b.addEventListener("click", ()=>{ closeModal(); openRoster(); });
+      list.appendChild(b);
+      return;
+    }
+    note.textContent = on.length
+      ? `${on.length} NERD${on.length>1?"s":""} shadowing ${holder} on this shift.`
+      : `Tap a name to pair them with ${holder}. More than one is fine.`;
+    note.style.color = "";
+
+    for(const n of activeNerds()){
+      const isOn = on.includes(n.id);
+      const elsewhere = nerdDayShifts(ds,n.id).filter(k=>k!==slot);
+      const blocked = !isOn && elsewhere.length;
+      const btn = el("button","pick"+(blocked?" blocked":""));
+      if(isOn) btn.style.cssText="background:var(--nerd-soft);border-color:var(--nerd-mid)";
+      const who = el("div","who");
+      const ini = el("span","ini", n.initials);
+      ini.style.cssText="background:var(--nerd-soft);color:var(--nerd);border-color:var(--nerd-mid)";
+      who.appendChild(ini);
+      if(n.name) who.appendChild(el("span","full", n.name));
+      btn.appendChild(who);
+      const right = el("div","right");
+      right.appendChild(el("span","load", `${counts[n.id]||0} this month`));
+      if(isOn) right.appendChild(el("span","why g","on this shift"));
+      else if(blocked) right.appendChild(el("span","why h", `already on ${SLOTS[elsewhere[0]].label} today`));
+      btn.appendChild(right);
+      if(!blocked) btn.addEventListener("click", ()=>{ setNerd(ds,slot,n.id,!isOn); save(); draw(); render(); });
+      list.appendChild(btn);
+    }
+  }
+  draw();
+  foot.appendChild(el("span","hint","NERDs shadow the doctor on the shift. They do not count toward coverage, totals or any rule."));
+  foot.appendChild(el("span","spacer"));
+  const done=el("button","btn primary","Done"); done.addEventListener("click", ()=>{closeModal();render();});
+  foot.appendChild(done);
+  showModal(m);
+}
+
+/* ---- coverage for one single day ---- */
+function openDaySetup(ds){
+  const d = fromIso(ds);
+  const {m, body, foot} = modalShell(
+    d.toLocaleDateString(undefined,{weekday:"long", month:"long", day:"numeric"}),
+    "Add or remove shifts for this one day");
+
+  const note = el("div","hint"); note.style.marginBottom="10px";
+  body.appendChild(note);
+  const host = el("div"); body.appendChild(host);
+
+  function draw(){
+    const now = slotsFor(ds), base = monthShapeFor(ds);
+    host.innerHTML = "";
+    const list = el("div","dayslots");
+    for(const k of SLOT_ORDER){
+      const on = now.includes(k), inBase = base.includes(k);
+      const who = at(ds,k);
+      const row = el("button","dayslot"+(on?" on":"")+(SLOTS[k].overnight?" noc":""));
+      const left = el("div","ds-l");
+      left.appendChild(el("span","ds-mark", on?"●":"○"));
+      left.appendChild(el("span","ds-name", SLOTS[k].label));
+      row.appendChild(left);
+      const right = el("div","ds-r");
+      if(on && who){
+        const chip = el("span","ds-doc", who);
+        const doc = docById(who); if(doc) tintEl(chip, doc.color);
+        right.appendChild(chip);
+      } else if(on){
+        right.appendChild(el("span","hint","open"));
+      }
+      if(on !== inBase) right.appendChild(el("span","ds-tag", on?"added":"removed"));
+      row.appendChild(right);
+      row.addEventListener("click", ()=>{
+        const next = now.slice();
+        const i = next.indexOf(k);
+        if(i>=0){
+          if(who && !confirm(`${who} is on ${SLOTS[k].label} this day. Remove the shift and unassign them?`)) return;
+          if(who) assign(ds,k,null);
+          next.splice(i,1);
+        } else next.push(k);
+        setDaySlots(ds, next);
+        save(); draw(); render();
+      });
+      list.appendChild(row);
+    }
+    host.appendChild(list);
+    const nowN = slotsFor(ds).length, baseN = base.length;
+    note.textContent = dayIsCustom(ds)
+      ? `${nowN} doctor${nowN===1?"":"s"} this day — the rest of ${DOW[d.getDay()]}s run ${baseN}.`
+      : `${nowN} doctor${nowN===1?"":"s"}, the same as every other ${DOW[d.getDay()]} this month.`;
+  }
+  draw();
+
+  const reset = el("button","btn","Match the month");
+  reset.addEventListener("click", ()=>{
+    const base = monthShapeFor(ds), now = slotsFor(ds);
+    const losing = now.filter(k=>!base.includes(k) && at(ds,k));
+    if(losing.length && !confirm(`This unassigns ${losing.length} placed shift${losing.length>1?"s":""}. Continue?`)) return;
+    losing.forEach(k=>assign(ds,k,null));
+    if(S.days) delete S.days[ds];
+    save(); draw(); render();
+  });
+  foot.appendChild(reset);
+  const toMonth = el("button","btn","Change every "+DOW[d.getDay()]);
+  toMonth.title = "Open the month's coverage instead";
+  toMonth.addEventListener("click", ()=>{ closeModal(); openMonthSetup(); });
+  foot.appendChild(toMonth);
+  foot.appendChild(el("span","spacer"));
+  const done=el("button","btn primary","Done"); done.addEventListener("click", ()=>{closeModal();render();});
+  foot.appendChild(done);
+  showModal(m);
+}
+
+/* ---- per-month coverage shape ---- */
+function openMonthSetup(){
+  const label = new Date(S.view.y,S.view.m,1).toLocaleDateString(undefined,{month:"long",year:"numeric"});
+  const {m, body, foot} = modalShell(label + " coverage",
+    "Which shifts run on which weekday, for this month only", true);
+
+  const lede = el("div","hint"); lede.style.marginBottom="10px";
+  lede.textContent = "Every other month keeps the standard shape. Turning a shift off will unassign anyone already placed on it.";
+  body.appendChild(lede);
+
+  const host = el("div"); body.appendChild(host);
+  const summary = el("div","hint"); summary.style.marginTop="10px"; body.appendChild(summary);
+
+  function draw(){
+    const custom = !!(S.months[monthKey(S.view.y,S.view.m)]||{}).tpl;
+    const tpl = custom ? S.months[monthKey(S.view.y,S.view.m)].tpl : TEMPLATE;
+    host.innerHTML="";
+    const g = el("div","cov");
+    g.appendChild(el("div","cov-h",""));
+    DOW3.forEach((d,w)=> g.appendChild(el("div","cov-h"+([0,6].includes(w)?" we":""), d)));
+    for(const k of SLOT_ORDER){
+      g.appendChild(el("div","cov-r"+(SLOTS[k].overnight?" noc":""), SLOTS[k].label));
+      for(let w=0;w<7;w++){
+        const on = (tpl[w]||[]).includes(k);
+        const b = el("button","cov-c"+(on?" on":""), on?"●":"");
+        b.title = `${SLOTS[k].label} on ${DOW[w]}s`;
+        b.addEventListener("click", ()=> toggle(k,w));
+        g.appendChild(b);
+      }
+    }
+    // per-weekday totals
+    g.appendChild(el("div","cov-r tot","doctors"));
+    for(let w=0;w<7;w++)
+      g.appendChild(el("div","cov-c tot"+([0,6].includes(w)?" we":""), String((tpl[w]||[]).length)));
+    host.appendChild(g);
+
+    const total = monthDays(S.view.y,S.view.m).reduce((n,ds)=>n+slotsFor(ds).length,0);
+    const targets = activeRoster().reduce((n,d)=>n+(+d.target||0),0);
+    summary.textContent = `${total} shifts this month against ${targets} preferred across the roster`
+      + (custom ? " · custom shape" : " · standard shape");
+  }
+
+  function toggle(slot, w){
+    const tpl = ensureMonthTpl(S.view.y,S.view.m);
+    const list = tpl[w] || (tpl[w]=[]);
+    const i = list.indexOf(slot);
+    if(i>=0){
+      const hit = monthDays(S.view.y,S.view.m).filter(ds=> dowOf(ds)===w && at(ds,slot));
+      if(hit.length && !confirm(
+        `${SLOTS[slot].label} on ${DOW[w]}s currently has ${hit.length} doctor${hit.length>1?"s":""} placed. Remove the shift and unassign them?`
+      )) return;
+      hit.forEach(ds=> assign(ds,slot,null));
+      list.splice(i,1);
+    } else {
+      list.push(slot);
+    }
+    save(); draw(); render();
+  }
+
+  draw();
+
+  const reset = el("button","btn","Standard shape");
+  reset.addEventListener("click", ()=>{
+    const total = monthDays(S.view.y,S.view.m).reduce((n,ds)=>n+slotsFor(ds).length,0);
+    if(!confirm("Reset this month to the standard weekday shape? Anyone on a shift that disappears will be unassigned.")) return;
+    delete S.months[monthKey(S.view.y,S.view.m)];
+    monthDays(S.view.y,S.view.m).forEach(ds=>{ if(S.days) delete S.days[ds]; });
+    for(const ds of monthDays(S.view.y,S.view.m)){
+      const keep = new Set(slotsFor(ds));
+      for(const k of SLOT_ORDER) if(!keep.has(k) && at(ds,k)) assign(ds,k,null);
+    }
+    save(); draw(); render();
+  });
+  foot.appendChild(reset);
+
+  const py = S.view.m===0 ? S.view.y-1 : S.view.y, pm = S.view.m===0 ? 11 : S.view.m-1;
+  const copy = el("button","btn", "Copy " + new Date(py,pm,1).toLocaleDateString(undefined,{month:"short"}));
+  copy.title = "Use last month's shape";
+  copy.addEventListener("click", ()=>{
+    const src = templateFor(py,pm);
+    const tpl = ensureMonthTpl(S.view.y,S.view.m);
+    for(let w=0;w<7;w++) tpl[w] = (src[w]||[]).slice();
+    for(const ds of monthDays(S.view.y,S.view.m)){
+      const keep = new Set(slotsFor(ds));
+      for(const k of SLOT_ORDER) if(!keep.has(k) && at(ds,k)) assign(ds,k,null);
+    }
+    save(); draw(); render();
+  });
+  foot.appendChild(copy);
+
+  foot.appendChild(el("span","spacer"));
+  const done=el("button","btn primary","Done"); done.addEventListener("click", ()=>{closeModal();render();});
+  foot.appendChild(done);
+  showModal(m);
+}
+
+/* ---- rules ---- */
+function openRules(){
+  const {m, body, foot} = modalShell("Rules",
+    "Everything the board enforces, editable from here", true);
+
+  const host = el("div"); body.appendChild(host);
+
+  function draw(){
+    host.innerHTML = "";
+
+    /* --- hard rules --- */
+    host.appendChild(el("div","pgroup","Hard rules — placement is blocked"));
+    const hard = el("div");
+    hard.appendChild(ruleToggle("onPto","Requests off",
+      "A day a doctor asked for cannot be scheduled."));
+    hard.appendChild(ruleToggle("onNight","Overnight eligibility",
+      "Doctors marked day-only cannot be given a 6p–6a."));
+    hard.appendChild(ruleToggle("onOneADay","One shift per doctor per day",
+      "Nobody can hold two shifts on the same date."));
+    hard.appendChild(ruleToggle("onRecovery","Night recovery",
+      `The ${S.rules.nightOffDays} days after an overnight are fully off; on day ${S.rules.nightOffDays+1} they return at 12p–12a or later; anything starting before noon waits until day ${S.rules.nightEarlyDays+1}.`));
+    if(S.rules.onRecovery!==false){
+      const sub = el("div"); sub.style.cssText="padding-left:24px";
+      sub.appendChild(numField("Full days off after an overnight","nightOffDays",0));
+      sub.appendChild(numField("Days before a shift starting before noon","nightEarlyDays",0));
+      hard.appendChild(sub);
+    }
+    host.appendChild(hard);
+
+    /* --- monthly minimums and maximums --- */
+    host.appendChild(el("div","pgroup","Monthly minimums and maximums"));
+    const qhost = el("div");
+    const capy = quotaCapacity(S.view.y,S.view.m);
+    const capOf = id => capy.find(c=>c.rule.id===id);
+    (S.rules.quotas||[]).forEach((r,idx)=>{
+      const card = el("div","rulecard"+(r.on===false?" off":""));
+      const top = el("div","rule-top");
+      const chk = el("input"); chk.type="checkbox"; chk.checked = r.on!==false;
+      chk.addEventListener("change", ()=>{ r.on=chk.checked; save(); draw(); render(); });
+      top.appendChild(chk);
+      top.appendChild(el("span","rule-txt", quotaLabel(r)));
+      const rm = el("button","btn danger","×"); rm.title="Delete this rule";
+      rm.addEventListener("click", ()=>{
+        if(!confirm("Delete this rule?")) return;
+        S.rules.quotas.splice(idx,1); save(); draw(); render();
+      });
+      top.appendChild(rm);
+      card.appendChild(top);
+
+      const ed = el("div","rule-edit");
+      ed.appendChild(pick(["min","max"],["at least","at most"], r.kind, v=>{ r.kind=v; }));
+      const num = el("input"); num.type="number"; num.min="0"; num.value=r.count;
+      num.style.cssText="width:58px;flex:none";
+      num.addEventListener("input", ()=>{ r.count=Math.max(0,parseInt(num.value,10)||0); save(); draw(); render(); });
+      ed.appendChild(num);
+      // what is being counted
+      const whatVals = ["any"].concat(DOW3.map((_,i)=>"w"+i)).concat(SLOT_ORDER.map(k=>"s"+k));
+      const whatText = ["shifts"].concat(DOW.map(d=>d+"s")).concat(SLOT_ORDER.map(k=>SLOTS[k].label));
+      const cur = r.what.type==="weekday" ? "w"+r.what.weekday : r.what.type==="slot" ? "s"+r.what.slot : "any";
+      ed.appendChild(pick(whatVals, whatText, cur, v=>{
+        r.what = v==="any" ? {type:"any"}
+               : v[0]==="w" ? {type:"weekday", weekday:+v.slice(1)}
+               : {type:"slot", slot:v.slice(1)};
+      }));
+      const whoVals = ["all","dayonly","night"].concat(activeRoster().map(d=>d.id));
+      const whoText = ["every doctor","day-only doctors","overnight doctors"].concat(activeRoster().map(d=>d.initials+" only"));
+      ed.appendChild(pick(whoVals, whoText, r.who, v=>{ r.who=v; }));
+      card.appendChild(ed);
+
+      const c = capOf(r.id);
+      if(r.on!==false && c && r.kind==="min"){
+        const f = el("div","hint");
+        f.textContent = c.fits
+          ? `Fits this month — ${c.slots} available against ${c.need} needed.`
+          : `Not reachable this month — only ${c.slots} available against ${c.need} needed, so at most ${c.maxDocs} of ${c.n} can get there.`;
+        if(!c.fits) f.style.color = "var(--warn-fg)";
+        card.appendChild(f);
+      }
+      qhost.appendChild(card);
+    });
+    const add = el("button","btn","+ Add a rule");
+    add.addEventListener("click", ()=>{
+      S.rules.quotas = S.rules.quotas||[];
+      S.rules.quotas.push({id:"r"+Date.now().toString(36), on:true, kind:"min", count:1,
+        what:{type:"any"}, who:"all"});
+      save(); draw(); render();
+    });
+    qhost.appendChild(add);
+    qhost.appendChild(el("div","hint","Counted over the whole month, so these are not placement blocks — the board reports who falls short and auto-fill chases them."));
+    host.appendChild(qhost);
+
+    /* --- soft rules --- */
+    host.appendChild(el("div","pgroup","Soft rules — flagged, never blocked"));
+    const soft = el("div");
+    soft.appendChild(numField("Overnights in a row before warning","maxConsecNights"));
+    soft.appendChild(numField("Days worked in a row before warning","maxConsecDays"));
+    soft.appendChild(boolField("Warn when a doctor passes their preferred total","warnOverTarget"));
+    soft.appendChild(el("div","hint","Blocked weekdays and shift rankings live on each doctor's card under Doctors."));
+    host.appendChild(soft);
+
+    /* --- auto-fill --- */
+    host.appendChild(el("div","pgroup","Auto-fill"));
+    const af = el("div");
+    const ps = el("div","f-row");
+    const psl = el("div"); psl.style.cssText="flex:1;font-size:12.5px;color:var(--ink-2)";
+    psl.textContent = "How hard to chase each doctor's shift ranking";
+    ps.appendChild(psl);
+    ps.appendChild(pick(["balanced","strong"],
+      ["Balanced — spread the load","Follow preferences closely"],
+      S.rules.prefStrength, v=>{ S.rules.prefStrength=v; }));
+    af.appendChild(ps);
+    af.appendChild(el("div","hint","Balanced shares weekends and overnights evenly. Following preferences closely lets specialists form — a doctor who ranks 6p–6a first takes most of the nights."));
+    host.appendChild(af);
+
+    /* --- coverage + override --- */
+    host.appendChild(el("div","pgroup","Coverage"));
+    host.appendChild(el("div","hint","Click the month name at the top of the board to change which shifts run on which weekday, or click any date to change that one day."));
+
+    host.appendChild(el("div","pgroup","Spike 3 times"));
+    const st = el("div");
+    st.appendChild(el("div","hint","The hours a Spike 3 can run. Pick from these when scheduling one; a Spike 3 does not count toward the day's coverage, but does count toward that doctor's monthly total."));
+    (S.spikeTimes||[]).forEach((t,i)=>{
+      const row = el("div","spktime");
+      const lab = el("input"); lab.type="text"; lab.value=t.label; lab.placeholder="2p–8p";
+      lab.addEventListener("input", ()=>{ t.label=lab.value; save(); render(); });
+      row.appendChild(lab);
+      const mk = (key,ph)=>{
+        const n=el("input"); n.type="number"; n.min="0"; n.max="30"; n.value=t[key];
+        n.style.cssText="width:62px;flex:none"; n.title=ph;
+        n.addEventListener("input", ()=>{ t[key]=Math.max(0,parseInt(n.value,10)||0); save(); render(); });
+        return n;
+      };
+      row.appendChild(el("span","hint","start"));
+      row.appendChild(mk("start","start hour, 24h"));
+      row.appendChild(el("span","hint","end"));
+      row.appendChild(mk("end","end hour, 24h"));
+      const rm=el("button","btn danger","×");
+      rm.addEventListener("click", ()=>{ S.spikeTimes.splice(i,1); save(); draw(); render(); });
+      row.appendChild(rm);
+      st.appendChild(row);
+    });
+    const addT = el("button","btn","+ Add a time");
+    addT.addEventListener("click", ()=>{
+      S.spikeTimes = S.spikeTimes||[];
+      S.spikeTimes.push({id:"s"+Date.now().toString(36), label:"New", start:14, end:20});
+      save(); draw(); render();
+    });
+    st.appendChild(addT);
+    host.appendChild(st);
+    host.appendChild(el("div","pgroup","Override"));
+    const ov = el("div");
+    ov.appendChild(boolField("Allow me to place a doctor despite a hard rule","allowOverride"));
+    ov.appendChild(el("div","hint","Off by default. The placement still shows a red flag when you use it."));
+    host.appendChild(ov);
+  }
+
+  function ruleToggle(key,title,desc){
+    const card = el("div","rulecard"+(S.rules[key]===false?" off":""));
+    const top = el("div","rule-top");
+    const chk = el("input"); chk.type="checkbox"; chk.checked = S.rules[key]!==false;
+    chk.addEventListener("change", ()=>{ S.rules[key]=chk.checked; save(); draw(); render(); });
+    top.appendChild(chk);
+    top.appendChild(el("span","rule-txt", title));
+    card.appendChild(top);
+    card.appendChild(el("div","hint", desc));
+    return card;
+  }
+  function pick(vals, texts, cur, on){
+    const sel = el("select"); sel.style.cssText="width:auto;flex:none";
+    vals.forEach((v,i)=>{ const o=el("option","",texts[i]); o.value=v; if(v===cur) o.selected=true; sel.appendChild(o); });
+    sel.addEventListener("change", ()=>{ on(sel.value); save(); draw(); render(); });
+    return sel;
+  }
+  function numField(label,key,min){
+    const lo = min===undefined ? 1 : min;
+    const w=el("div","f-row");
+    const l=el("div"); l.style.cssText="flex:1;font-size:12.5px;color:var(--ink-2)"; l.textContent=label;
+    const i=el("input"); i.type="number"; i.min=String(lo); i.value=S.rules[key];
+    i.style.cssText="width:70px;flex:none";
+    i.addEventListener("input", ()=>{
+      const v=parseInt(i.value,10);
+      S.rules[key]= Number.isFinite(v) ? Math.max(lo,v) : lo;
+      save(); render();
+    });
+    w.append(l,i); return w;
+  }
+  function boolField(label,key){
+    const w=el("label","chk"); w.style.cssText="display:flex;gap:8px;padding:5px 0;font-size:12.5px";
+    const i=el("input"); i.type="checkbox"; i.checked=!!S.rules[key];
+    i.addEventListener("change", ()=>{ S.rules[key]=i.checked; save(); render(); });
+    w.appendChild(i); w.appendChild(document.createTextNode(label)); return w;
+  }
+
+  draw();
+  const reset = el("button","btn danger","Reset to defaults");
+  reset.addEventListener("click", ()=>{
+    if(!confirm("Put every rule back to how it shipped?")) return;
+    S.rules = {...DEFAULT_RULES, quotas:DEFAULT_RULES.quotas.map(q=>({...q, what:{...q.what}}))};
+    save(); draw(); render();
+  });
+  foot.appendChild(reset);
+  foot.appendChild(el("span","spacer"));
+  const done=el("button","btn primary","Done"); done.addEventListener("click", ()=>{closeModal();render();});
+  foot.appendChild(done);
+  showModal(m);
+}
+
+/* ---- data ---- */
+const SETUP_SQL = `create table if not exists schedules (
+  id          text primary key,
+  version     integer not null default 1,
+  data        jsonb   not null default '{}'::jsonb,
+  updated_at  timestamptz default now()
+);
+
+alter table schedules enable row level security;
+
+create policy "read schedules"   on schedules for select using (true);
+create policy "insert schedules" on schedules for insert with check (true);
+create policy "update schedules" on schedules for update using (true);`;
+
+function openSharing(){
+  const {m, body, foot} = modalShell("Sharing",
+    "Put the schedule in a Supabase project so it survives new devices and reaches your team", true);
+
+  const cfg = Object.assign({url:"",key:"",table:"schedules",id:"clifton"}, Cloud.cfg||{});
+
+  const state = el("div","hint"); state.style.marginBottom="10px";
+  const restate = ()=>{
+    state.textContent = Cloud.on
+      ? `Connected · version ${Cloud.version} · ${SYNC_TEXT[Cloud.status][0].toLowerCase()}`
+        + (Cloud.lastError ? ` · last error: ${Cloud.lastError}` : "")
+      : "Not connected. The board is saving to this browser only, which no one else can see.";
+  };
+  restate(); body.appendChild(state);
+
+  body.appendChild(el("div","pgroup","1 · Create the table"));
+  const p1 = el("div","hint");
+  p1.innerHTML = "In your Supabase project open <b>SQL Editor</b>, paste this and run it. It makes one table the board reads and writes.";
+  body.appendChild(p1);
+  const pre = el("pre","sql"); pre.textContent = SETUP_SQL; body.appendChild(pre);
+  const cp = el("button","btn","Copy the SQL");
+  cp.addEventListener("click", ()=>{
+    navigator.clipboard.writeText(SETUP_SQL).then(
+      ()=>{ cp.textContent="Copied"; setTimeout(()=>cp.textContent="Copy the SQL",1500); },
+      ()=>{ cp.textContent="Select it manually"; });
+  });
+  body.appendChild(cp);
+
+  body.appendChild(el("div","pgroup","2 · Point the board at it"));
+  const p2 = el("div","hint");
+  p2.innerHTML = "From <b>Project Settings → API</b>: the Project URL, and the <b>anon public</b> key — not the service_role key, which must never go in a web page.";
+  body.appendChild(p2);
+
+  const f = el("div");
+  const field = (label,key,ph)=>{
+    const w=el("div"); w.style.marginBottom="8px";
+    w.appendChild(el("label","fl",label));
+    const i=el("input"); i.type="text"; i.value=cfg[key]||""; i.placeholder=ph||"";
+    i.addEventListener("input",()=>{ cfg[key]=i.value.trim(); });
+    w.appendChild(i); return w;
+  };
+  f.appendChild(field("Project URL","url","https://xxxxxxxx.supabase.co"));
+  f.appendChild(field("Anon public key","key","eyJhbGciOi…"));
+  const row = el("div","f-row");
+  const t1=field("Table","table","schedules"), t2=field("Schedule name","id","clifton");
+  t1.style.flex="1"; t2.style.flex="1"; row.append(t1,t2);
+  f.appendChild(row);
+  body.appendChild(f);
+
+  const out = el("div"); out.style.marginTop="8px"; body.appendChild(out);
+  const say = (txt, bad)=>{ out.innerHTML=""; const d=el("div","hint"); d.style.color = bad?"var(--crit)":"var(--good)"; d.textContent=txt; out.appendChild(d); };
+
+  const test = el("button","btn","Test connection");
+  test.addEventListener("click", async ()=>{
+    if(!cfg.url || !cfg.key){ say("Fill in both the URL and the key first.", true); return; }
+    test.disabled=true; test.textContent="Testing…";
+    const prev = Cloud.cfg; Cloud.cfg = {...cfg};
+    try{
+      const row = await Cloud.fetchRow();
+      say(row ? `Reached the table. A schedule named "${cfg.id}" already exists there at version ${row.version}.`
+              : `Reached the table. No schedule named "${cfg.id}" yet — connecting will create it.`);
+    }catch(e){
+      say("Could not reach it: "+String(e.message||e).slice(0,200), true);
+      Cloud.cfg = prev;
+    }
+    test.disabled=false; test.textContent="Test connection";
+  });
+
+  const connect = el("button","btn primary","Connect");
+  connect.addEventListener("click", async ()=>{
+    if(!cfg.url || !cfg.key){ say("Fill in both the URL and the key first.", true); return; }
+    connect.disabled=true; connect.textContent="Connecting…";
+    saveCloudCfg({...cfg});
+    try{
+      const row = await Cloud.fetchRow();
+      if(!row){
+        await Cloud.createRow();
+        say("Connected. This board has been uploaded as the starting point.");
+      } else if(confirm(
+        `A schedule already exists in the database (version ${row.version}).\n\n` +
+        `OK — use the database copy and replace what is on this device.\n` +
+        `Cancel — push what is on this device up, overwriting the database.`)){
+        adoptShared(row.data); Cloud.version = row.version;
+        say("Connected. Pulled the schedule down from the database.");
+      } else {
+        Cloud.version = row.version; await Cloud.push();
+        say("Connected. Pushed this device's schedule up.");
+      }
+      Cloud.startPolling(); render(); restate();
+    }catch(e){
+      say("Could not connect: "+String(e.message||e).slice(0,200), true);
+      saveCloudCfg(null); setSync("local");
+    }
+    connect.disabled=false; connect.textContent="Connect";
+  });
+
+  const off = el("button","btn danger","Disconnect");
+  off.addEventListener("click", ()=>{
+    if(!confirm("Stop syncing? The schedule stays in the database and on this device, but they will drift apart.")) return;
+    saveCloudCfg(null); clearInterval(Cloud.pollT); setSync("local"); restate();
+  });
+
+  body.appendChild(el("div","pgroup","3 · So nobody else has to do this"));
+  const p3 = el("div","hint"); p3.style.lineHeight="1.55";
+  p3.innerHTML = "Drop a file called <b>hc-config.json</b> next to the page in your GitHub repo and everyone who opens the site is connected automatically:";
+  body.appendChild(p3);
+  const cfgPre = el("pre","sql");
+  const cfgJson = ()=> JSON.stringify({url:cfg.url||"https://xxxxxxxx.supabase.co",
+    key:cfg.key||"eyJhbGciOi…", table:cfg.table||"schedules", id:cfg.id||"clifton"}, null, 2);
+  cfgPre.textContent = cfgJson();
+  body.appendChild(cfgPre);
+  const cp2 = el("button","btn","Copy hc-config.json");
+  cp2.addEventListener("click", ()=>{
+    cfgPre.textContent = cfgJson();
+    navigator.clipboard.writeText(cfgJson()).then(
+      ()=>{ cp2.textContent="Copied"; setTimeout(()=>cp2.textContent="Copy hc-config.json",1500); },
+      ()=>{ cp2.textContent="Select it manually"; });
+  });
+  body.appendChild(cp2);
+
+  body.appendChild(el("div","pgroup","Worth knowing"));
+  const warn = el("div","hint"); warn.style.lineHeight="1.55";
+  warn.textContent = "The anon key sits in the page, so anyone with your site address can read and edit the schedule. That is normally fine for shift initials on an internal tool, but do not put anything confidential in the notes fields. If you want it locked down, Supabase Auth with a row-level policy of auth.role() = 'authenticated' will require each person to sign in — say the word and I will wire that up. Edits save about half a second after you stop, and the board re-checks the database every 12 seconds. If two people save at the same moment the later save wins and the other person's board refreshes with a notice.";
+  body.appendChild(warn);
+
+  foot.append(test, connect, el("span","spacer"));
+  if(Cloud.on) foot.appendChild(off);
+  const done=el("button","btn","Close"); done.addEventListener("click", closeModal);
+  foot.appendChild(done);
+  showModal(m);
+}
+
+function openData(){
+  const {m, body, foot} = modalShell("Data", "Everything lives in this browser until you export it");
+  const b1 = el("button","btn","Export month as CSV");
+  b1.addEventListener("click", exportCsv);
+  const b2 = el("button","btn","Export everything as JSON");
+  b2.addEventListener("click", exportJson);
+  const b3 = el("button","btn","Import JSON backup");
+  b3.addEventListener("click", importJson);
+  const b4 = el("button","btn","Print / save as PDF");
+  b4.addEventListener("click", ()=>{ closeModal(); setTimeout(()=>window.print(),120); });
+  const b5 = el("button","btn danger","Clear this month's assignments");
+  b5.addEventListener("click", ()=>{
+    if(!confirm("Clear every assignment in "+$("#mLabel").textContent+"? Roster and time off stay.")) return;
+    monthDays(S.view.y,S.view.m).forEach(d=>delete S.schedule[d]);
+    save(); closeModal(); render();
+  });
+  const b6 = el("button","btn danger","Reset everything");
+  b6.addEventListener("click", ()=>{
+    if(!confirm("Wipe roster, time off and all months? This cannot be undone.")) return;
+    S = blankState(); save(); closeModal(); render();
+  });
+  [b1,b2,b3,b4].forEach(b=>{ b.style.cssText+=";display:block;width:100%;text-align:left;margin-bottom:7px"; body.appendChild(b); });
+  body.appendChild(el("div","pgroup","Careful"));
+  [b5,b6].forEach(b=>{ b.style.cssText+=";display:block;width:100%;text-align:left;margin-bottom:7px"; body.appendChild(b); });
+  body.appendChild(el("div","pgroup","This build"));
+  const ver = el("div","hint");
+  ver.textContent = `Herding Cats ${APP_VERSION} · ${APP_BUILT}` +
+    (Cloud.on ? ` · syncing, schedule version ${Cloud.version}` : " · this device only");
+  body.appendChild(ver);
+  foot.appendChild(el("span","hint","Export a JSON backup before switching devices or clearing your browser."));
+  showModal(m);
+}
+function download(name, text, type){
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([text],{type:type||"text/plain"}));
+  a.download=name; a.click(); URL.revokeObjectURL(a.href);
+}
+function exportCsv(){
+  const rows=[["Date","Weekday","Slot","Doctor","NERDs"]];
+  for(const ds of monthDays(S.view.y,S.view.m)){
+    for(const slot of slotsFor(ds)){
+      const nn = nerdsOn(ds,slot).map(x=>(nerdById(x)||{}).initials||x).join(" ");
+      rows.push([ds, DOW[dowOf(ds)], SLOTS[slot].label.replace("–","-"), at(ds,slot)||"OPEN", nn]);
+    }
+    for(const e of spikeOn(ds)){
+      const t = spikeTime(e.t);
+      rows.push([ds, DOW[dowOf(ds)], "Spike 3 "+((t&&t.label)||"").replace("–","-"), e.doc||"OPEN", ""]);
+    }
+  }
+  const csv = rows.map(r=>r.map(c=>/[",]/.test(c)?`"${c.replace(/"/g,'""')}"`:c).join(",")).join("\n");
+  download(`herding-cats-${S.view.y}-${pad(S.view.m+1)}.csv`, csv, "text/csv");
+}
+function exportJson(){ download("herding-cats-backup.json", JSON.stringify(S,null,2), "application/json"); }
+function importJson(){
+  const i=document.createElement("input"); i.type="file"; i.accept="application/json,.json";
+  i.addEventListener("change", ()=>{
+    const f=i.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=()=>{
+      try{
+        const s=JSON.parse(r.result);
+        if(!s.roster) throw new Error("not a backup");
+        S=s; S.rules={...DEFAULT_RULES,...(S.rules||{})};
+        save(); closeModal(); render();
+      }catch(e){ flashBlock("That file could not be read as a backup"); }
+    };
+    r.readAsText(f);
+  });
+  i.click();
+}
+
+/* ============================================================
+   8. WIRING
+   ============================================================ */
+
+$("#prevM").addEventListener("click", ()=>{ let{y,m}=S.view; m--; if(m<0){m=11;y--;} S.view={y,m}; render(); });
+$("#nextM").addEventListener("click", ()=>{ let{y,m}=S.view; m++; if(m>11){m=0;y++;} S.view={y,m}; render(); });
+$("#btnToday").addEventListener("click", ()=>{ const d=new Date(); S.view={y:d.getFullYear(),m:d.getMonth()}; render(); });
+$("#mLabel").addEventListener("click", openMonthSetup);
+$("#btnAuto").addEventListener("click", openAutofill);
+$("#btnRoster").addEventListener("click", openRoster);
+$("#btnRules").addEventListener("click", openRules);
+$("#btnData").addEventListener("click", openData);
+$("#btnShare").addEventListener("click", openSharing);
+
+/* theme — resolved once so there is a single source of truth, then remembered */
+function applyTheme(t){
+  document.documentElement.setAttribute("data-theme", t);
+  $("#btnTheme").textContent = t==="dark" ? "☀" : "☾";
+  $("#btnTheme").title = t==="dark" ? "Switch to light" : "Switch to dark";
+}
+if(!S.theme) S.theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+applyTheme(S.theme);
+$("#btnTheme").addEventListener("click", ()=>{
+  S.theme = S.theme==="dark" ? "light" : "dark";
+  applyTheme(S.theme); save();
+});
+$("#armX").addEventListener("click", ()=> toggleArm(armed));
+
+// On narrow screens the side panels sit above the calendar and start folded,
+// so the month is still the first thing you see.
+const NARROW = ()=> window.matchMedia("(max-width:860px)").matches;
+document.querySelectorAll(".panel.foldable").forEach(p=>{
+  if(NARROW()) p.classList.add("folded");
+  p.querySelector(".panel-h").addEventListener("click", ()=>{
+    if(NARROW()) p.classList.toggle("folded");
+  });
+});
+window.addEventListener("resize", ()=>{
+  if(!NARROW()) document.querySelectorAll(".panel.foldable").forEach(p=>p.classList.remove("folded"));
+});
+
+render();
+
+/* boot the shared layer after first paint so the board never waits on network */
+(async ()=>{
+  Cloud.cfg = loadCloudCfg();
+  // If the site is deployed with an hc-config.json beside it, everyone who opens
+  // the page is connected automatically — no one has to paste a key.
+  if(!Cloud.on && /^https?:$/.test(location.protocol)){
+    try{
+      const r = await fetch("hc-config.json", {cache:"no-store"});
+      if(r.ok){
+        const c = await r.json();
+        if(c && c.url && c.key) saveCloudCfg({table:"schedules", id:"clifton", ...c});
+      }
+    }catch(e){ /* no config file deployed — stay local */ }
+  }
+  saveLocal();
+  if(Cloud.on){
+    setSync("saving");
+    await Cloud.pull();
+    Cloud.startPolling();
+    render();
+  } else {
+    setSync("local");
+  }
+})();
+// a tab coming back into focus should catch up
+document.addEventListener("visibilitychange", ()=>{
+  if(!document.hidden && Cloud.on && !pendingPush) Cloud.pull();
+});
+</script>
+</body>
+</html>
